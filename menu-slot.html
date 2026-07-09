@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>저메추 슬롯</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: #f4f5f7; color: #1a1a2e;
+    display: flex; justify-content: center;
+    padding: 24px 16px 48px; min-height: 100vh;
+  }
+  .app { width: 100%; max-width: 900px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .app { grid-template-columns: 1fr; } }
+  h1 { grid-column: 1 / -1; font-size: 24px; text-align: center; margin-bottom: 4px; }
+  .card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .card h2 { font-size: 16px; margin-bottom: 14px; }
+
+  .slot-wrap { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .slot-machine {
+    position: relative; width: 260px; height: 120px;
+    border: 4px solid #1a1a2e; border-radius: 14px; overflow: hidden;
+    background: #fff; box-shadow: inset 0 0 20px rgba(0,0,0,0.06);
+  }
+  .slot-reel { display: flex; flex-direction: column; will-change: transform; }
+  .slot-item {
+    height: 40px; line-height: 40px; text-align: center;
+    font-size: 17px; font-weight: 700; color: #1a1a2e;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 12px;
+  }
+  .slot-machine::before, .slot-machine::after {
+    content: ""; position: absolute; left: 0; right: 0; height: 40px; z-index: 2; pointer-events: none;
+  }
+  .slot-machine::before { top: 0; background: linear-gradient(#fff, rgba(255,255,255,0)); }
+  .slot-machine::after { bottom: 0; background: linear-gradient(rgba(255,255,255,0), #fff); }
+  .win-line {
+    position: absolute; top: 40px; left: 0; right: 0; height: 40px;
+    border-top: 2px solid #ff6b6b; border-bottom: 2px solid #ff6b6b;
+    background: rgba(255,107,107,0.06); z-index: 1; pointer-events: none;
+  }
+  .result { font-size: 22px; font-weight: 800; min-height: 30px; text-align: center; }
+  .result .sub { font-size: 13px; font-weight: 500; color: #888; }
+  .spin-btn {
+    padding: 13px 40px; font-size: 18px; font-weight: 700;
+    border: none; border-radius: 10px; background: #1a1a2e; color: #fff;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .spin-btn:disabled { opacity: .45; cursor: default; }
+  .opt-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #444; user-select: none; }
+  .opt-row input { width: 16px; height: 16px; }
+  .excluded-info { font-size: 12px; color: #999; text-align: center; min-height: 16px; }
+  .reset-link { background: none; border: none; color: #2563eb; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0; }
+
+  .add-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .add-row input { flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+  .add-row button { padding: 0 16px; border: none; border-radius: 8px; background: #2563eb; color: #fff; font-weight: 600; cursor: pointer; }
+  ul.menu-list { list-style: none; display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; }
+  .menu-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #eee; border-radius: 8px; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+  .menu-item .name { flex: 1; font-size: 14px; }
+  .menu-item input.edit { flex: 1; padding: 4px 6px; font-size: 14px; border: 1px solid #2563eb; border-radius: 6px; }
+  .menu-item button { border: none; background: none; cursor: pointer; font-size: 13px; padding: 4px 6px; border-radius: 6px; color: #666; }
+  .menu-item button:hover { background: #f0f0f0; }
+  .menu-item button.del:hover { background: #fde8e8; color: #d11; }
+  .empty-msg { font-size: 13px; color: #aaa; text-align: center; padding: 20px 0; }
+  .count { font-size: 12px; color: #999; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>🎰 저메추 슬롯</h1>
+  <div class="card slot-wrap">
+    <h2 style="align-self:flex-start;">슬롯머신</h2>
+    <div class="slot-machine">
+      <div class="win-line"></div>
+      <div class="slot-reel" id="reel"></div>
+    </div>
+    <div class="result" id="result">돌리기를 눌러보세요</div>
+    <button class="spin-btn" id="spinBtn">돌리기</button>
+    <label class="opt-row">
+      <input type="checkbox" id="excludeChk">
+      당첨된 메뉴는 다음 슬롯에서 제외
+    </label>
+    <div class="excluded-info" id="excludedInfo"></div>
+  </div>
+  <div class="card">
+    <h2>메뉴 관리 <span class="count" id="count"></span></h2>
+    <div class="add-row">
+      <input type="text" id="addInput" placeholder="메뉴 이름 입력 후 Enter" maxlength="12">
+      <button id="addBtn">추가</button>
+    </div>
+    <ul class="menu-list" id="menuList"></ul>
+  </div>
+</div>
+
+<script>
+const COLORS = ["#ff6b6b","#feca57","#48dbfb","#1dd1a1","#ff9ff3","#54a0ff","#5f27cd","#ff9f43","#00b894","#e17055","#0984e3","#6c5ce7"];
+const ITEM_H = 40;
+const SPIN_MS = 1500;
+
+let menus = ["김치찌개","제육볶음","라멘","돈까스","파스타","국밥","샐러드","치킨"];
+let excluded = new Set();
+let spinning = false;
+let editingIndex = -1;
+
+const reelEl = document.getElementById("reel");
+const resultEl = document.getElementById("result");
+const spinBtn = document.getElementById("spinBtn");
+const excludeChk = document.getElementById("excludeChk");
+const excludedInfo = document.getElementById("excludedInfo");
+const menuListEl = document.getElementById("menuList");
+const addInput = document.getElementById("addInput");
+const addBtn = document.getElementById("addBtn");
+const countEl = document.getElementById("count");
+
+function activeMenus() {
+  if (excludeChk.checked) return menus.filter(m => !excluded.has(m));
+  return menus.slice();
+}
+function colorOf(name) {
+  const idx = menus.indexOf(name);
+  return COLORS[idx % COLORS.length];
+}
+
+function spin() {
+  const list = activeMenus();
+  if (spinning) return;
+  if (list.length === 0) {
+    resultEl.innerHTML = '모든 메뉴가 제외되었습니다<br><span class="sub">제외 목록을 초기화하세요</span>';
+    return;
+  }
+  if (list.length === 1) { finish(list[0]); return; }
+
+  spinning = true;
+  spinBtn.disabled = true;
+  resultEl.textContent = "";
+
+  const n = list.length;
+  const winnerIndex = Math.floor(Math.random() * n);
+  const loops = 6;
+
+  // 릴 구성: 맨 위 spacer 1칸 + (loops+2)바퀴 반복
+  reelEl.innerHTML = "";
+  const spacer = document.createElement("div");
+  spacer.className = "slot-item";
+  reelEl.appendChild(spacer);
+  const totalLoops = loops + 2;
+  for (let l = 0; l < totalLoops; l++) {
+    for (let i = 0; i < n; i++) {
+      const div = document.createElement("div");
+      div.className = "slot-item";
+      div.textContent = list[i];
+      div.style.color = colorOf(list[i]);
+      reelEl.appendChild(div);
+    }
+  }
+
+  // 정지 위치: spacer(1칸) 다음부터 세므로, win-line(위 1칸째)에 winner를 맞추려면
+  // reel을 (loops*n + winnerIndex) 칸만큼 위로 이동
+  const stopItems = loops * n + winnerIndex;
+  const offset = -stopItems * ITEM_H;
+
+  reelEl.style.transition = "none";
+  reelEl.style.transform = "translateY(0)";
+  void reelEl.offsetHeight;
+
+  reelEl.style.transition = "transform " + SPIN_MS + "ms cubic-bezier(0.15, 0.85, 0.2, 1)";
+  reelEl.style.transform = "translateY(" + offset + "px)";
+
+  setTimeout(() => {
+    spinning = false;
+    spinBtn.disabled = false;
+    finish(list[winnerIndex]);
+  }, SPIN_MS + 60);
+}
+
+function finish(name) {
+  resultEl.innerHTML = "👉 " + name;
+  if (excludeChk.checked) {
+    excluded.add(name);
+    renderExcludedInfo();
+    setTimeout(renderIdleReel, 500);
+  }
+}
+
+function renderIdleReel() {
+  if (spinning) return;
+  const list = activeMenus();
+  reelEl.style.transition = "none";
+  reelEl.style.transform = "translateY(0)";
+  reelEl.innerHTML = "";
+  const spacer = document.createElement("div");
+  spacer.className = "slot-item";
+  reelEl.appendChild(spacer);
+  if (list.length === 0) {
+    const div = document.createElement("div");
+    div.className = "slot-item";
+    div.textContent = "—";
+    reelEl.appendChild(div);
+    return;
+  }
+  list.forEach(name => {
+    const div = document.createElement("div");
+    div.className = "slot-item";
+    div.textContent = name;
+    div.style.color = colorOf(name);
+    reelEl.appendChild(div);
+  });
+}
+
+function renderExcludedInfo() {
+  if (excludeChk.checked && excluded.size > 0) {
+    excludedInfo.innerHTML = "제외됨: " + [...excluded].join(", ") + ' <button class="reset-link" id="resetExcl">초기화</button>';
+    document.getElementById("resetExcl").onclick = () => {
+      excluded.clear();
+      renderExcludedInfo(); renderIdleReel();
+    };
+  } else {
+    excludedInfo.textContent = "";
+  }
+}
+
+function renderMenuList() {
+  menuListEl.innerHTML = "";
+  countEl.textContent = "(" + menus.length + "개)";
+  if (menus.length === 0) {
+    menuListEl.innerHTML = '<div class="empty-msg">등록된 메뉴가 없습니다.</div>';
+    return;
+  }
+  menus.forEach((name, i) => {
+    const li = document.createElement("li");
+    li.className = "menu-item";
+    const sw = document.createElement("span");
+    sw.className = "swatch";
+    sw.style.background = COLORS[i % COLORS.length];
+    li.appendChild(sw);
+
+    if (editingIndex === i) {
+      const input = document.createElement("input");
+      input.className = "edit";
+      input.value = name;
+      input.maxLength = 12;
+      li.appendChild(input);
+      input.focus();
+      input.setSelectionRange(name.length, name.length);
+      const save = () => commitEdit(i, input.value);
+      input.addEventListener("keydown", e => {
+        if (e.key === "Enter") save();
+        if (e.key === "Escape") { editingIndex = -1; renderMenuList(); }
+      });
+      const saveBtn = document.createElement("button");
+      saveBtn.textContent = "저장";
+      saveBtn.onclick = save;
+      li.appendChild(saveBtn);
+    } else {
+      const nm = document.createElement("span");
+      nm.className = "name";
+      nm.textContent = name;
+      li.appendChild(nm);
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "수정";
+      editBtn.onclick = () => { editingIndex = i; renderMenuList(); };
+      li.appendChild(editBtn);
+      const delBtn = document.createElement("button");
+      delBtn.className = "del";
+      delBtn.textContent = "삭제";
+      delBtn.onclick = () => removeMenu(i);
+      li.appendChild(delBtn);
+    }
+    menuListEl.appendChild(li);
+  });
+}
+
+function commitEdit(i, val) {
+  const v = val.trim();
+  if (!v) { alert("메뉴 이름을 입력하세요."); return; }
+  if (menus.some((m, idx) => m === v && idx !== i)) { alert("이미 있는 메뉴입니다."); return; }
+  const old = menus[i];
+  if (excluded.has(old)) { excluded.delete(old); excluded.add(v); }
+  menus[i] = v;
+  editingIndex = -1;
+  renderAll();
+}
+function removeMenu(i) {
+  const name = menus[i];
+  excluded.delete(name);
+  menus.splice(i, 1);
+  if (editingIndex === i) editingIndex = -1;
+  renderAll();
+}
+function addMenu() {
+  const v = addInput.value.trim();
+  if (!v) return;
+  if (menus.includes(v)) { alert("이미 있는 메뉴입니다."); return; }
+  menus.push(v);
+  addInput.value = "";
+  renderAll();
+}
+
+function renderAll() {
+  renderIdleReel();
+  renderExcludedInfo();
+  renderMenuList();
+}
+
+spinBtn.onclick = spin;
+addBtn.onclick = addMenu;
+addInput.addEventListener("keydown", e => { if (e.key === "Enter") addMenu(); });
+excludeChk.addEventListener("change", () => { renderIdleReel(); renderExcludedInfo(); });
+
+renderAll();
+</script>
+</body>
+</html>
