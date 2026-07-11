@@ -4,6 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>저메추 슬롯</title>
+
+<!-- ===== PWA(홈 화면 설치용) 설정 =====
+     manifest.json: 앱 이름·아이콘·색상 등 '앱 정보'를 담은 파일
+     theme-color: 폰 상태바 색상 (아이콘 배경과 같은 주황)
+     apple-touch-icon: 아이폰(사파리)에서 홈 화면에 추가할 때 쓰는 아이콘 -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FF4713">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="저메추 슬롯">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
@@ -26,7 +38,9 @@
     display: flex; justify-content: center;
     padding: 24px 16px 90px; min-height: 100vh; -webkit-font-smoothing: antialiased;
   }
-  .app { width: 100%; max-width: 920px; }
+  /* [모바일 앱 폭] 콘텐츠를 최대 480px로 제한 → 데스크톱에서도 휴대폰 앱처럼 보임.
+     body가 flex+center라 480px 컬럼이 화면 가운데 정렬되고, 좌우 바깥은 body 배경(--bg)으로 채워짐. */
+  .app { width: 100%; max-width: 480px; }
   h1 { font-size: 23px; font-weight: 800; letter-spacing: -0.02em; text-align: center; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; }
   .logo-symbol { font-size: 28px; background: var(--black); color: #fff; border-radius: 10px; width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; font-variation-settings: 'FILL' 1, 'wght' 600; }
 
@@ -57,8 +71,8 @@
   .group-manage-row .g-del { width: 38px; height: 38px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); background: #fff; border-radius: 9px; color: var(--gray-2); cursor: pointer; }
   .group-manage-row .g-del:hover { background: #fdecec; color: var(--danger); }
   .group-manage-row .g-del:disabled { opacity: 0.35; cursor: not-allowed; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  /* [모바일 앱 폭] 480px 안에서는 2열이 좁으므로 항상 1열로 세로 배치 */
+  .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
   .card h2 { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; }
   .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
@@ -330,7 +344,9 @@
   .bar-fill { height: 100%; border-radius: 999px; background: var(--ink); }
   .stats-empty { text-align: center; color: var(--gray-2); padding: 30px 0; font-size: 14px; }
 
-  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 62px; background: #fff; border-top: 1px solid var(--line); display: flex; z-index: 50; }
+  /* [모바일 앱 폭] 고정 하단바도 480px로 제한 + 가운데 정렬 (앱 컬럼과 폭을 맞춤).
+     left:50% + translateX(-50%)로 화면 정중앙에 놓고, max-width로 480px를 넘지 않게 함. */
+  .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; height: 62px; background: #fff; border-top: 1px solid var(--line); display: flex; z-index: 50; }
   .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: none; background: none; cursor: pointer; color: var(--gray-2); font-size: 11px; font-weight: 600; }
   .nav-btn .material-symbols-rounded { font-size: 23px; }
   .nav-btn.active { color: var(--black); }
@@ -1460,6 +1476,8 @@ function switchTab(tab){
   document.querySelectorAll(".tab-page").forEach(p=>p.classList.remove("active"));
   $("page-"+tab).classList.add("active");
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
+  // 그룹 바는 슬롯/히스토리에서만 노출 (관리 탭에선 숨김)
+  groupBar.style.display = (tab==="manage") ? "none" : "";
   if(tab==="history") renderHistory();
 }
 function switchSubTab(sub){
@@ -1548,9 +1566,25 @@ addCatBtn.onclick=addCategory; catClose.onclick=closeCatManage;
 catOverlay.addEventListener("click",e=>{ if(e.target===catOverlay) closeCatManage(); });
 copyDlgClose.onclick=closeCopyDialog; copyDlgCopy.onclick=doCopyFromDialog;
 copyOverlay.addEventListener("click",e=>{ if(e.target===copyOverlay) closeCopyDialog(); });
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(overlay.classList.contains("open"))closeDialog(); if(catOverlay.classList.contains("open"))closeCatManage(); if(copyOverlay.classList.contains("open"))closeCopyDialog(); } });
+groupManageBtn.onclick=openGroupManage; addGroupBtn.onclick=addGroup; groupClose.onclick=closeGroupManage;
+groupOverlay.addEventListener("click",e=>{ if(e.target===groupOverlay) closeGroupManage(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(overlay.classList.contains("open"))closeDialog(); if(catOverlay.classList.contains("open"))closeCatManage(); if(copyOverlay.classList.contains("open"))closeCopyDialog(); if(groupOverlay.classList.contains("open"))closeGroupManage(); } });
 
 load(); renderAll();
+</script>
+
+<!-- ===== PWA 서비스워커 등록 =====
+     이 코드가 위에서 만든 sw.js를 켜서, 앱을 폰에 저장(캐싱)하고 오프라인에서도 열리게 합니다.
+     * file:// 로 (파일 더블클릭) 열면 동작하지 않고, https(배포)나 localhost에서만 동작합니다.
+     * try/catch로 감싸서, 혹시 실패해도 앱 자체는 정상 동작하도록 했습니다. -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch((err) => {
+        console.log("서비스워커 등록 실패(무시 가능):", err);
+      });
+    });
+  }
 </script>
 </body>
 </html>

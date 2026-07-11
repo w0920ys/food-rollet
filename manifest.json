@@ -1,0 +1,37 @@
+{
+  "//": "이 파일은 PWA(홈 화면에 설치되는 웹앱)의 '앱 정보'입니다. 폰이 이걸 읽어 앱 이름/아이콘/색을 정합니다.",
+
+  "name": "저메추 슬롯",
+  "short_name": "저메추",
+  "//_name": "name=설치 안내에 보이는 전체 이름, short_name=홈 화면 아이콘 밑에 짧게 보이는 이름",
+
+  "start_url": "./index.html",
+  "//_start_url": "앱을 열었을 때 처음 보여줄 페이지",
+
+  "display": "standalone",
+  "//_display": "standalone=브라우저 주소창 없이 '진짜 앱'처럼 전체화면으로 열림",
+
+  "background_color": "#FF4713",
+  "theme_color": "#FF4713",
+  "//_colors": "background_color=앱 켤 때 첫 배경, theme_color=폰 상태바 색 (아이콘 배경 주황과 맞춤)",
+
+  "orientation": "portrait",
+  "//_orientation": "세로 화면 고정 (모바일 앱 폭에 맞춤)",
+
+  "lang": "ko",
+
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
