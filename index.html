@@ -693,6 +693,18 @@
   </div>
 </div>
 
+<!-- [공용] 예/아니오 확인 팝업 -->
+<div class="overlay" id="confirmOverlay">
+  <div class="dialog">
+    <h3 id="confirmTitle">확인</h3>
+    <p class="auth-line" id="confirmMsg"></p>
+    <div class="dialog-actions">
+      <button class="btn btn-soft" id="confirmNo">아니요</button>
+      <button class="btn btn-primary" id="confirmYes">이동</button>
+    </div>
+  </div>
+</div>
+
 <!-- [로그인] 로그인/회원가입 팝업 -->
 <div class="overlay" id="authOverlay">
   <div class="dialog">
@@ -1101,6 +1113,12 @@ function setFinal(tk, item){
   else { delete finals[tk]; }
   save(); renderTodayList();
   if($("page-history").classList.contains("active")) renderHistory();
+  // 당첨으로 '지정'한 경우에만: 히스토리로 이동할지 확인 (해제 때는 안 물음)
+  if(item){
+    showConfirm("히스토리 탭으로 이동하면 모든 선택된 메뉴를 볼 수 있어요. 이동할까요?",
+      ()=>{ selectedDate=tk; switchTab("history"); },
+      { title:"당첨!", yes:"이동", no:"아니요" });
+  }
 }
 // 드래그 정렬 이벤트 (드롭 위치 divider 표시)
 let dragSrcName=null;
@@ -1806,7 +1824,23 @@ $("lnbContact").onclick=()=>{ closeLnb(); location.href="mailto:w0920ys@gmail.co
 $("profClose").onclick=()=>$("profileOverlay").classList.remove("open");
 $("profileOverlay").addEventListener("click",(e)=>{ if(e.target.id==="profileOverlay") $("profileOverlay").classList.remove("open"); });
 
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(overlay.classList.contains("open"))closeDialog(); if(catOverlay.classList.contains("open"))closeCatManage(); if(copyOverlay.classList.contains("open"))closeCopyDialog(); if(groupOverlay.classList.contains("open"))closeGroupManage(); if(lnbOverlay.classList.contains("open"))closeLnb(); } });
+// [공용] 예/아니오 확인 팝업 (showConfirm("메시지", ()=>{예 눌렀을 때}, {title,yes,no}))
+let __confirmYes = null;
+function showConfirm(msg, onYes, opts){
+  opts = opts || {};
+  $("confirmTitle").textContent = opts.title || "확인";
+  $("confirmMsg").textContent = msg;
+  $("confirmYes").textContent = opts.yes || "확인";
+  $("confirmNo").textContent = opts.no || "아니요";
+  __confirmYes = onYes;
+  $("confirmOverlay").classList.add("open");
+}
+function closeConfirm(){ $("confirmOverlay").classList.remove("open"); __confirmYes=null; }
+$("confirmYes").onclick=()=>{ const f=__confirmYes; closeConfirm(); if(f) f(); };
+$("confirmNo").onclick=closeConfirm;
+$("confirmOverlay").addEventListener("click",(e)=>{ if(e.target.id==="confirmOverlay") closeConfirm(); });
+
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(overlay.classList.contains("open"))closeDialog(); if(catOverlay.classList.contains("open"))closeCatManage(); if(copyOverlay.classList.contains("open"))closeCopyDialog(); if(groupOverlay.classList.contains("open"))closeGroupManage(); if(lnbOverlay.classList.contains("open"))closeLnb(); if($("confirmOverlay").classList.contains("open"))closeConfirm(); } });
 
 load(); renderAll();
 </script>
