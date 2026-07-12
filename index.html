@@ -50,6 +50,47 @@
   /* 로그인 팝업 안에서 쓰는 상태 문구 */
   .auth-line { font-size: 13px; color: var(--gray-1); margin-bottom: 12px; line-height: 1.5; }
   .auth-line b { color: var(--ink); }
+
+  /* ===== [Part A] 새 헤더: 로고(좌) · 그룹 드롭다운 · 메뉴 버튼(우) ===== */
+  .app-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; position: relative; }
+  .brand-logo { width: 34px; height: 34px; border-radius: 9px; overflow: hidden; flex-shrink: 0; display: inline-flex; }
+  .brand-logo svg { width: 100%; height: 100%; display: block; }
+  .header-spacer { flex: 1; }
+  .menu-btn { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 9px; color: var(--ink); cursor: pointer; flex-shrink: 0; }
+  .menu-btn:hover { background: var(--soft); }
+  .menu-btn .material-symbols-rounded { font-size: 24px; }
+
+  /* 그룹 선택 드롭다운 */
+  .group-dd { position: relative; }
+  .group-dd-btn { display: inline-flex; align-items: center; gap: 2px; min-height: 36px; padding: 6px 8px 6px 13px; border: 1.5px solid var(--line); border-radius: 999px; background: #fff; font-size: 14px; font-weight: 700; color: var(--ink); cursor: pointer; }
+  .group-dd-btn .material-symbols-rounded { font-size: 20px; color: var(--gray-1); }
+  .group-dd-panel { display: none; position: absolute; top: calc(100% + 6px); left: 0; min-width: 180px; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.10); padding: 6px; z-index: 60; }
+  .group-dd-panel.open { display: block; }
+  .group-dd-item { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 40px; padding: 8px 10px; border: none; background: none; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--ink); cursor: pointer; text-align: left; }
+  .group-dd-item:hover { background: var(--soft); }
+  .group-dd-item.active { font-weight: 800; }
+  .group-dd-item .material-symbols-rounded { font-size: 18px; }
+  .group-dd-manage { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 42px; margin-top: 4px; padding: 8px 10px; border: none; border-top: 1px solid var(--line); background: none; font-size: 13px; font-weight: 600; color: var(--gray-1); cursor: pointer; }
+  .group-dd-manage:hover { color: var(--ink); }
+  .group-dd-manage .material-symbols-rounded { font-size: 18px; }
+
+  /* ===== [Part A] LNB: 오른쪽에서 슬라이드되는 메뉴 서랍 ===== */
+  .lnb-overlay { position: fixed; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: rgba(0,0,0,0.4); opacity: 0; visibility: hidden; transition: opacity 0.2s; z-index: 200; }
+  .lnb-overlay.open { opacity: 1; visibility: visible; }
+  .lnb { position: absolute; top: 0; right: 0; bottom: 0; width: 82%; max-width: 320px; background: #fff; box-shadow: -4px 0 24px rgba(0,0,0,0.12); padding: 16px; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.22s cubic-bezier(0.2,0.6,0.25,1); }
+  .lnb-overlay.open .lnb { transform: translateX(0); }
+  .lnb-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .lnb-title { font-size: 16px; font-weight: 800; }
+  .lnb-close { width: 36px; height: 36px; border: none; background: none; border-radius: 8px; color: var(--gray-1); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .lnb-close:hover { background: var(--soft); }
+  .lnb-account { background: var(--soft); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+  .lnb-acc-desc { font-size: 13px; color: var(--gray-1); margin-bottom: 10px; line-height: 1.5; }
+  .lnb-acc-email { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 4px; word-break: break-all; }
+  .lnb-acc-sync { font-size: 12px; color: var(--gray-1); margin-bottom: 10px; min-height: 14px; }
+  .lnb-menu { display: flex; flex-direction: column; gap: 2px; }
+  .lnb-item { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 10px 12px; border: none; background: none; border-radius: 10px; font-size: 15px; font-weight: 600; color: var(--ink); cursor: pointer; text-align: left; }
+  .lnb-item:hover { background: var(--soft); }
+  .lnb-item .material-symbols-rounded { font-size: 22px; color: var(--gray-1); }
   h1 { font-size: 23px; font-weight: 800; letter-spacing: -0.02em; text-align: center; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; }
   .logo-symbol { font-size: 28px; background: var(--black); color: #fff; border-radius: 10px; width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; font-variation-settings: 'FILL' 1, 'wght' 600; }
 
@@ -397,16 +438,41 @@
 </head>
 <body>
 <div class="app">
-  <!-- [로그인] 우측 상단 계정 버튼: 누르면 로그인 팝업이 열림 -->
-  <button class="account-btn" id="accountBtn" title="로그인"><span class="material-symbols-rounded">person</span></button>
-  <h1><span class="logo-symbol material-symbols-rounded">casino</span>저메추 슬롯</h1>
+  <!-- [Part A 헤더] 로고(최좌측) · 그룹 드롭다운 · 메뉴 버튼(최우측) -->
+  <header class="app-header">
+    <!-- 모먹지 로고 (SVG 인라인) -->
+    <span class="brand-logo" aria-label="모먹지">
+      <svg viewBox="0 0 1254 1254" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g clip-path="url(#clip0_2_10)">
+      <path d="M0 0H1254V1254H0V0Z" fill="#FF5A2C"/>
+      <path d="M269.259 457.661C277.018 456.847 285.321 457.188 293.129 457.196C331.028 457.232 384.265 459.301 412.378 487.817C435.875 511.65 437.006 545.399 436.615 576.837C435.885 635.676 409.75 663.518 352.385 673.498C346.045 674.601 332.987 675.182 328.73 680.179C325.328 684.171 327.387 696.307 327.642 701.444C327.82 705.008 328.391 708.822 331.32 711.229C332.647 712.319 334.169 712.906 335.882 712.986C341.637 713.249 347.985 711.572 353.689 710.604C362.113 709.177 370.535 707.757 379.041 706.893C401.793 704.591 427.724 706.122 446.141 721.375C455.485 729.114 460.982 739.511 462 751.592C463.068 764.279 458.946 776.366 450.633 785.954C421.969 819.031 331.235 824.872 288.857 827.977C277.792 829.159 261.716 829.991 250.627 829.875C207.699 829.422 104.175 837.651 102.89 774.229C102.761 761.823 107.592 749.883 116.309 741.06C138.001 718.742 169.746 724.026 197.433 724.289C203.441 724.344 220.777 724.228 224.917 719.807C229.94 713.549 227.334 701.603 227.441 694.096C227.653 679.272 215.653 681.734 205.495 680.932C145.462 676.162 108.721 651.798 105.517 587.806C103.956 556.614 106.03 524.3 127.685 499.013C159.079 464.244 225.593 460.078 269.259 457.661Z" fill="#FEFEFE"/>
+      <path d="M277.219 550.733C288.176 550.104 316.721 548.744 326.085 557.775C337.906 569.176 333.988 590.903 316.449 595.05C304.336 597.914 289.108 598.65 275.69 599.445C261.597 600.054 236.944 602.867 225.106 594.086C216.286 587.691 216.705 568.892 224.07 561.938C235.675 550.98 261.884 551.607 277.219 550.733Z" fill="#FF5A2C"/>
+      <path d="M751.555 461.817C757.513 461.126 763.55 461.509 769.373 462.95C788.097 467.67 800.062 484.791 804.703 502.648C815.896 545.688 814.445 652.062 770.898 676.774C760.14 682.812 747.404 684.244 735.574 680.76C715.729 674.962 707.543 660.469 707.494 640.783C707.126 630.576 712.055 618.446 698.07 616.744C673.382 613.737 674.692 619.016 664.326 638.462C661.693 643.404 654.517 651.174 649.386 654.719C618.152 676.321 556.333 677.423 520.468 671.545C483.855 666.439 465.942 645.228 462.228 608.908C457.57 576.757 459.293 527.2 478.898 501.196C512.604 456.49 646.306 456.652 669.941 513.708C671.766 518.116 676.235 536.293 678.642 537.501C685.095 540.734 708.896 542.89 709.563 530.913C710.163 499.331 713.476 469.146 751.555 461.817Z" fill="#FEFEFE"/>
+      <path d="M562.299 548.781C588.146 547.885 594.286 550.584 592.957 578.822C592.35 591.712 593.25 601.407 577.555 603.658C549.899 605.926 544.506 602.709 545.454 573.605C545.886 560.351 547.236 550.937 562.299 548.781Z" fill="#FF5A2C"/>
+      <path d="M924.696 496.253C956.169 495.339 1004.54 499.927 1023.41 528.075C1046.06 561.845 1024.28 607.041 1010.05 640.036C1007.08 646.918 999.606 657.799 998.351 664.632C998.644 665.943 999.551 667.149 1000.52 668.043C1010.95 676.964 1019.51 685.953 1028.56 696.233C1047.87 718.154 1049.36 753.539 1024.29 772.667C1015.75 779.237 1004.9 782.042 994.236 780.437C965.525 776.09 953.456 742.181 945.594 741.042C940.965 744.348 930.617 756.6 926.233 761.315C918.818 769.208 910.993 776.709 902.782 783.775C891.522 793.149 880.476 800.454 865.585 801.721C847.222 803.289 830.726 794.006 823.415 776.929C817.623 764.095 818.915 747.912 825.913 735.66C834.02 721.466 847.675 707.879 858.996 695.945C869.895 684.661 880.58 673.18 891.05 661.503C902.341 648.829 926.135 621.753 925.26 604.152C923.466 590.502 900.4 591.262 890.015 591.013C863.668 590.382 832.508 584.333 831.136 551.563C830.597 539.775 834.847 528.271 842.917 519.662C861.709 499.797 898.643 496.977 924.696 496.253Z" fill="#FEFEFE"/>
+      <path d="M612.795 682.989C672.709 680.962 774.118 684.802 789.034 759.197C794.092 785.342 788.575 812.43 773.696 834.516C753.508 864.482 706.808 887.64 676.774 853.455C673.058 849.224 671.294 842.844 670.302 837.284C669.243 812.412 690.521 807.079 689.633 793.204C689.394 789.383 687.141 786.101 684.306 783.67C665.067 767.187 586.88 781.87 562.203 784.038C542.031 785.807 516.755 786.573 500.359 772.588C492.25 765.669 487.686 755.755 486.927 745.187C486.06 733.125 489.73 721.883 497.768 712.827C520.346 687.379 580.622 684.759 612.795 682.989Z" fill="#FEFEFE"/>
+      <path d="M1101.41 540.318C1107.85 540.382 1114.04 541.681 1119.84 544.523C1134.27 551.6 1142.86 566.776 1147.88 581.427C1164.55 630.062 1161.21 748.726 1138.24 794.869C1132.63 806.142 1124.27 814.292 1112.28 818.351C1106.49 819.968 1099.55 820.09 1093.66 818.988C1053.91 811.543 1059.95 764.224 1062.14 734.398C1063.17 721.479 1063.9 708.534 1064.34 695.578C1065.26 667.969 1063.5 641.089 1061.27 613.572C1058.69 581.748 1061.22 542.777 1101.41 540.318Z" fill="#FEFEFE"/>
+      <path d="M1064.17 373.661C1082.43 372.862 1087.92 388.977 1083.41 403.971C1080.35 414.694 1077.36 425.603 1073.79 436.173C1070.33 446.401 1069.88 455.843 1059.94 461.809C1035.9 468.085 1038.04 439.863 1040.86 425.137C1044.6 405.708 1040.39 378.536 1064.17 373.661Z" fill="#FEFEFE"/>
+      <path d="M1138.12 412.229C1139.24 412.28 1140.34 412.38 1141.45 412.529C1146.66 413.251 1151.68 416.642 1154.6 420.931C1164.27 435.153 1150.15 447.86 1140.45 456.612C1130.13 465.93 1120.11 475.07 1108.65 482.601C1095.04 487.556 1085.65 474.647 1091.84 463.617C1098.08 452.469 1107.21 440.972 1114.8 430.664C1121.44 421.648 1126.55 414.175 1138.12 412.229Z" fill="#FEFEFE"/>
+      <path d="M1178.7 476.469C1181.81 476.164 1188.69 476.156 1190.8 478.237C1225.23 512.307 1158.82 519.36 1145.5 522.105C1130.79 524.498 1119.51 519.051 1125.23 504.288C1128.77 495.172 1169.01 479.115 1178.7 476.469Z" fill="#FEFEFE"/>
+      </g>
+      <defs><clipPath id="clip0_2_10"><rect width="1254" height="1254" fill="white"/></clipPath></defs>
+      </svg>
+    </span>
 
-  <!-- [그룹 기능] 로그인했을 때만 보임 (아래 Supabase 모듈이 로그인 상태에 따라 표시/숨김).
-       기본은 숨김(display:none) → 로그인 안 한 사용자에게는 그룹 바가 안 보임. -->
-  <div class="group-bar" id="groupBar" style="display:none;">
-    <div class="group-chips" id="groupChips"></div>
-    <button class="group-manage-btn" id="groupManageBtn" title="그룹 관리"><span class="material-symbols-rounded">group</span></button>
-  </div>
+    <!-- 그룹 선택 드롭다운 (로그인 시에만 표시; 모듈이 display 제어) -->
+    <div class="group-dd" id="groupDd" style="display:none;">
+      <button class="group-dd-btn" id="groupDdBtn"><span id="groupDdLabel">기본</span><span class="material-symbols-rounded">expand_more</span></button>
+      <div class="group-dd-panel" id="groupDdPanel">
+        <div id="groupDdList"></div>
+        <button class="group-dd-manage" id="groupManageBtn"><span class="material-symbols-rounded">settings</span>그룹 관리</button>
+      </div>
+    </div>
+
+    <span class="header-spacer"></span>
+    <!-- 메뉴 버튼 → LNB 열기 -->
+    <button class="menu-btn" id="menuBtn" title="메뉴"><span class="material-symbols-rounded">menu</span></button>
+  </header>
 
   <div class="tab-page active" id="page-slot">
     <div class="card slot-wrap">
@@ -563,6 +629,62 @@
     <div class="dialog-msg" id="groupMsg"></div>
     <div class="dialog-actions">
       <button class="btn btn-primary" id="groupClose" style="flex:1;justify-content:center;">완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- [Part A] LNB: 오른쪽 슬라이드 메뉴 서랍 -->
+<div class="lnb-overlay" id="lnbOverlay">
+  <aside class="lnb" id="lnb">
+    <div class="lnb-head">
+      <span class="lnb-title">메뉴</span>
+      <button class="lnb-close" id="lnbClose"><span class="material-symbols-rounded">close</span></button>
+    </div>
+    <!-- 계정 영역 (로그인 상태에 따라 Supabase 모듈이 갱신) -->
+    <div class="lnb-account">
+      <div id="lnbAccOut">
+        <p class="lnb-acc-desc">로그인하면 저장한 메뉴가 클라우드에 백업되고, 다른 기기에서도 똑같이 보여요.</p>
+        <button class="btn btn-primary" id="lnbLoginBtn" style="width:100%;justify-content:center;">로그인 / 회원가입</button>
+      </div>
+      <div id="lnbAccIn" style="display:none;">
+        <p class="lnb-acc-email" id="lnbAccEmail"></p>
+        <p class="lnb-acc-sync" id="lnbSync"></p>
+        <button class="btn btn-soft" id="lnbLogoutBtn" style="width:100%;justify-content:center;">로그아웃</button>
+      </div>
+    </div>
+    <nav class="lnb-menu">
+      <button class="lnb-item" id="lnbProfile"><span class="material-symbols-rounded">manage_accounts</span>회원 정보 관리</button>
+      <button class="lnb-item" id="lnbAppInfo"><span class="material-symbols-rounded">info</span>앱 정보 / 버전</button>
+      <button class="lnb-item" id="lnbContact"><span class="material-symbols-rounded">mail</span>문의하기</button>
+    </nav>
+  </aside>
+</div>
+
+<!-- [Part A] 회원 정보 관리 팝업 -->
+<div class="overlay" id="profileOverlay">
+  <div class="dialog">
+    <h3>회원 정보 관리</h3>
+    <p class="auth-line">이메일: <b id="profEmail"></b></p>
+    <div class="field">
+      <label for="profPass">새 비밀번호 (6자 이상)</label>
+      <input type="password" id="profPass" class="input" placeholder="변경할 비밀번호" autocomplete="new-password">
+    </div>
+    <div class="dialog-msg" id="profMsg"></div>
+    <div class="dialog-actions">
+      <button class="btn btn-soft" id="profClose">닫기</button>
+      <button class="btn btn-primary" id="profSave">비밀번호 변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- [Part A] 앱 정보 팝업 -->
+<div class="overlay" id="appInfoOverlay">
+  <div class="dialog">
+    <h3>앱 정보</h3>
+    <p class="auth-line"><b>모먹지</b> · 버전 <span id="appVer"></span></p>
+    <p class="auth-line">오늘 뭐 먹지? 고민을 슬롯으로 해결하는 메뉴 추첨 앱.</p>
+    <div class="dialog-actions">
+      <button class="btn btn-primary" id="appInfoClose" style="flex:1;justify-content:center;">닫기</button>
     </div>
   </div>
 </div>
@@ -855,7 +977,8 @@ const reelEl=$("reel"), resultEl=$("result"), spinBtn=$("spinBtn"), confirmBtn=$
   copyOverlay=$("copyOverlay"), copyDlgTitle=$("copyDlgTitle"), copyPreviewList=$("copyPreviewList"),
   copyDlgClose=$("copyDlgClose"), copyDlgCopy=$("copyDlgCopy"),
   todayList=$("todayList"), todayCount=$("todayCount"), openTodayCopy=$("openTodayCopy"),
-  groupBar=$("groupBar"), groupChips=$("groupChips"), groupManageBtn=$("groupManageBtn"),
+  groupDd=$("groupDd"), groupDdBtn=$("groupDdBtn"), groupDdLabel=$("groupDdLabel"), groupDdPanel=$("groupDdPanel"), groupDdList=$("groupDdList"), groupManageBtn=$("groupManageBtn"),
+  menuBtn=$("menuBtn"), lnbOverlay=$("lnbOverlay"),
   groupOverlay=$("groupOverlay"), groupManageList=$("groupManageList"), addGroupBtn=$("addGroupBtn"), groupMsg=$("groupMsg"), groupClose=$("groupClose");
 
 function poolMenus(){ let l=menus.filter(m=>m.selected); if(excludeChk.checked) l=l.filter(m=>!excluded.has(m.name)); return l; }
@@ -1568,13 +1691,18 @@ function renderAll(){ renderGroupBar(); renderIdleReel(); renderExcludedInfo(); 
 
 // 그룹 바 렌더
 function renderGroupBar(){
-  groupChips.innerHTML="";
+  // 헤더 드롭다운 버튼의 라벨을 현재 그룹 이름으로
+  const cur = groups.find(x=>x.id===activeGroup) || groups[0];
+  if(groupDdLabel) groupDdLabel.textContent = cur ? cur.name : "그룹";
+  if(!groupDdList) return;
+  // 드롭다운 목록 채우기
+  groupDdList.innerHTML="";
   groups.forEach(g=>{
-    const chip=document.createElement("button"); chip.className="group-chip"+(g.id===activeGroup?" active":"");
-    if(g.id===activeGroup){ const ic=document.createElement("span"); ic.className="material-symbols-rounded"; ic.textContent="check"; chip.appendChild(ic); }
-    chip.appendChild(document.createTextNode(g.name));
-    chip.onclick=()=>switchGroup(g.id);
-    groupChips.appendChild(chip);
+    const row=document.createElement("button"); row.className="group-dd-item"+(g.id===activeGroup?" active":"");
+    if(g.id===activeGroup){ const ic=document.createElement("span"); ic.className="material-symbols-rounded"; ic.textContent="check"; row.appendChild(ic); }
+    row.appendChild(document.createTextNode(g.name));
+    row.onclick=()=>{ switchGroup(g.id); groupDdPanel.classList.remove("open"); };
+    groupDdList.appendChild(row);
   });
 }
 function openGroupManage(){ groupMsg.textContent=""; renderGroupManage(); groupOverlay.classList.add("open"); }
@@ -1645,9 +1773,37 @@ addCatBtn.onclick=addCategory; catClose.onclick=closeCatManage;
 catOverlay.addEventListener("click",e=>{ if(e.target===catOverlay) closeCatManage(); });
 copyDlgClose.onclick=closeCopyDialog; copyDlgCopy.onclick=doCopyFromDialog;
 copyOverlay.addEventListener("click",e=>{ if(e.target===copyOverlay) closeCopyDialog(); });
-groupManageBtn.onclick=openGroupManage; addGroupBtn.onclick=addGroup; groupClose.onclick=closeGroupManage;
+groupManageBtn.onclick=()=>{ groupDdPanel.classList.remove("open"); openGroupManage(); };
+addGroupBtn.onclick=addGroup; groupClose.onclick=closeGroupManage;
 groupOverlay.addEventListener("click",e=>{ if(e.target===groupOverlay) closeGroupManage(); });
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(overlay.classList.contains("open"))closeDialog(); if(catOverlay.classList.contains("open"))closeCatManage(); if(copyOverlay.classList.contains("open"))closeCopyDialog(); if(groupOverlay.classList.contains("open"))closeGroupManage(); } });
+
+// [Part A] 헤더 그룹 드롭다운 열고 닫기
+groupDdBtn.onclick=(e)=>{ e.stopPropagation(); groupDdPanel.classList.toggle("open"); };
+document.addEventListener("click",(e)=>{ if(groupDdPanel.classList.contains("open") && !groupDd.contains(e.target)) groupDdPanel.classList.remove("open"); });
+
+// [Part A] LNB(오른쪽 메뉴 서랍) 열고 닫기 — closeLnb는 Supabase 모듈에서도 씀
+function openLnb(){ lnbOverlay.classList.add("open"); }
+function closeLnb(){ lnbOverlay.classList.remove("open"); }
+window.closeLnb = closeLnb;
+menuBtn.onclick=openLnb;
+$("lnbClose").onclick=closeLnb;
+lnbOverlay.addEventListener("click",(e)=>{ if(e.target===lnbOverlay) closeLnb(); });
+
+// [Part A] 앱 정보 팝업
+const APP_VERSION="1.0";
+$("appVer").textContent=APP_VERSION;
+$("lnbAppInfo").onclick=()=>{ closeLnb(); $("appInfoOverlay").classList.add("open"); };
+$("appInfoClose").onclick=()=>$("appInfoOverlay").classList.remove("open");
+$("appInfoOverlay").addEventListener("click",(e)=>{ if(e.target.id==="appInfoOverlay") $("appInfoOverlay").classList.remove("open"); });
+
+// [Part A] 문의하기 → 메일 앱 열기
+$("lnbContact").onclick=()=>{ closeLnb(); location.href="mailto:w0920ys@gmail.com?subject="+encodeURIComponent("모먹지 문의"); };
+
+// [Part A] 회원 정보 관리 팝업 닫기 (열기·저장은 Supabase 모듈에서)
+$("profClose").onclick=()=>$("profileOverlay").classList.remove("open");
+$("profileOverlay").addEventListener("click",(e)=>{ if(e.target.id==="profileOverlay") $("profileOverlay").classList.remove("open"); });
+
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(overlay.classList.contains("open"))closeDialog(); if(catOverlay.classList.contains("open"))closeCatManage(); if(copyOverlay.classList.contains("open"))closeCopyDialog(); if(groupOverlay.classList.contains("open"))closeGroupManage(); if(lnbOverlay.classList.contains("open"))closeLnb(); } });
 
 load(); renderAll();
 </script>
@@ -1683,11 +1839,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 화면 요소들
 const $ = (id) => document.getElementById(id);
-const accountBtn = $("accountBtn");
 const authOverlay = $("authOverlay");
 const boxOut = $("authLoggedOut"), boxIn = $("authLoggedIn");
 const emailEl = $("authEmail"), passEl = $("authPass"), msgEl = $("authMsg");
-const whoEl = $("authWho"), syncEl = $("authSyncStatus");
+// LNB 계정 영역 + 동기화 상태 (로그인 상태 표시는 이제 LNB에서)
+const lnbAccOut = $("lnbAccOut"), lnbAccIn = $("lnbAccIn"), lnbEmailEl = $("lnbAccEmail"), syncEl = $("lnbSync");
 
 let currentUser = null;   // 현재 로그인한 사용자 (없으면 null)
 let syncedUserId = null;  // 이미 동기화를 마친 사용자 id (중복 방지)
@@ -1700,14 +1856,16 @@ function closeAuth(){ authOverlay.classList.remove("open"); }
 // ---- 로그인 상태에 따라 화면 갱신 ----
 function renderAuthView(){
   const on = !!currentUser;
+  // 로그인 팝업: 항상 로그인 폼만 사용 (로그인 상태 표시는 LNB로 이동)
   boxOut.style.display = on ? "none" : "block";
-  boxIn.style.display  = on ? "block" : "none";
-  if(on){ whoEl.textContent = currentUser.email || "(이메일)"; }
-  accountBtn.classList.toggle("on", on);
-  accountBtn.title = on ? ("계정: " + (currentUser.email||"")) : "로그인";
-  // [그룹 기능] 로그인했을 때만 그룹 바(기본/남자친구/…)를 보여줌
-  const gb = document.getElementById("groupBar");
-  if(gb) gb.style.display = on ? "flex" : "none";
+  boxIn.style.display  = "none";
+  // LNB 계정 영역 전환
+  if(lnbAccOut) lnbAccOut.style.display = on ? "none" : "block";
+  if(lnbAccIn)  lnbAccIn.style.display  = on ? "block" : "none";
+  if(on && lnbEmailEl) lnbEmailEl.textContent = currentUser.email || "";
+  // [그룹 기능] 로그인했을 때만 헤더 그룹 드롭다운을 보여줌
+  const gd = document.getElementById("groupDd");
+  if(gd) gd.style.display = on ? "block" : "none";
 }
 
 // ---- 클라우드에서 내 데이터 한 줄 읽기 ----
@@ -1755,6 +1913,7 @@ window.onStateSaved = function(){
 supabase.auth.onAuthStateChange(async (_event, session) => {
   currentUser = session?.user || null;
   renderAuthView();
+  if(currentUser){ closeAuth(); }   // 로그인되면 로그인 팝업 자동 닫기
   if(currentUser && syncedUserId !== currentUser.id){
     syncedUserId = currentUser.id;
     await syncOnLogin();
@@ -1763,10 +1922,29 @@ supabase.auth.onAuthStateChange(async (_event, session) => {
 });
 
 // ---- 버튼 동작 ----
-accountBtn.onclick = openAuth;
 $("authCloseBtn").onclick = closeAuth;
 $("authDoneBtn").onclick = closeAuth;
 authOverlay.addEventListener("click", (e)=>{ if(e.target===authOverlay) closeAuth(); });
+
+// LNB의 '로그인' 버튼 → 로그인 팝업 열기
+$("lnbLoginBtn").onclick = () => { if(window.closeLnb) window.closeLnb(); openAuth(); };
+
+// LNB의 '회원 정보 관리' → 로그인 상태면 팝업, 아니면 로그인 유도
+$("lnbProfile").onclick = () => {
+  if(window.closeLnb) window.closeLnb();
+  if(!currentUser){ openAuth(); return; }
+  $("profEmail").textContent = currentUser.email || "";
+  $("profMsg").textContent = ""; $("profPass").value = "";
+  $("profileOverlay").classList.add("open");
+};
+// 비밀번호 변경
+$("profSave").onclick = async () => {
+  const pw = $("profPass").value;
+  if(pw.length < 6){ $("profMsg").textContent = "비밀번호는 6자 이상이어야 해요."; return; }
+  $("profMsg").textContent = "변경 중…";
+  const { error } = await supabase.auth.updateUser({ password: pw });
+  $("profMsg").textContent = error ? ("변경 실패: " + error.message) : "비밀번호가 변경되었습니다.";
+};
 
 $("authSignupBtn").onclick = async () => {
   msgEl.textContent = "가입 중…";
@@ -1780,10 +1958,11 @@ $("authLoginBtn").onclick = async () => {
   if(error){ msgEl.textContent = "로그인 실패: " + error.message; }
   else { msgEl.textContent = ""; }
 };
-$("authLogoutBtn").onclick = async () => {
+// LNB의 '로그아웃' 버튼
+$("lnbLogoutBtn").onclick = async () => {
   await supabase.auth.signOut();
-  syncEl.textContent = "";
-  closeAuth();
+  if(syncEl) syncEl.textContent = "";
+  if(window.closeLnb) window.closeLnb();
 };
 </script>
 </body>
