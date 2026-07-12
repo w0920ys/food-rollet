@@ -11,7 +11,7 @@
    ========================================================================= */
 
 // 앱을 수정할 때마다 이 숫자를 올려주세요 (v1 → v2 → v3 ...)
-const CACHE_VERSION = "jeomechu-slot-v3";
+const CACHE_VERSION = "jeomechu-slot-v4";
 
 // 오프라인에서도 열리게 미리 저장해 둘 파일 목록
 const FILES_TO_CACHE = [
