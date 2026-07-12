@@ -1682,8 +1682,7 @@ function switchTab(tab){
   document.querySelectorAll(".tab-page").forEach(p=>p.classList.remove("active"));
   $("page-"+tab).classList.add("active");
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
-  // 그룹 바는 슬롯/히스토리에서만 노출 (관리 탭에선 숨김)
-  groupBar.style.display = (tab==="manage") ? "none" : "";
+  // (헤더의 그룹 드롭다운 표시 여부는 로그인 상태에 따라 renderAuthView가 관리)
   if(tab==="history") renderHistory();
 }
 function switchSubTab(sub){
