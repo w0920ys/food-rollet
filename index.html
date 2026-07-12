@@ -401,7 +401,9 @@
   <button class="account-btn" id="accountBtn" title="로그인"><span class="material-symbols-rounded">person</span></button>
   <h1><span class="logo-symbol material-symbols-rounded">casino</span>저메추 슬롯</h1>
 
-  <div class="group-bar" id="groupBar">
+  <!-- [그룹 기능] 로그인했을 때만 보임 (아래 Supabase 모듈이 로그인 상태에 따라 표시/숨김).
+       기본은 숨김(display:none) → 로그인 안 한 사용자에게는 그룹 바가 안 보임. -->
+  <div class="group-bar" id="groupBar" style="display:none;">
     <div class="group-chips" id="groupChips"></div>
     <button class="group-manage-btn" id="groupManageBtn" title="그룹 관리"><span class="material-symbols-rounded">group</span></button>
   </div>
@@ -1703,6 +1705,9 @@ function renderAuthView(){
   if(on){ whoEl.textContent = currentUser.email || "(이메일)"; }
   accountBtn.classList.toggle("on", on);
   accountBtn.title = on ? ("계정: " + (currentUser.email||"")) : "로그인";
+  // [그룹 기능] 로그인했을 때만 그룹 바(기본/남자친구/…)를 보여줌
+  const gb = document.getElementById("groupBar");
+  if(gb) gb.style.display = on ? "flex" : "none";
 }
 
 // ---- 클라우드에서 내 데이터 한 줄 읽기 ----
