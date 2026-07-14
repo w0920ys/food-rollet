@@ -23,21 +23,57 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <style>
   :root {
-    /* [Part B] 테이블링(Tabling) 디자인 시스템 색 토큰 */
+    /* ===== [파운데이션] 디자인 시스템 토큰 (파일 기준; 내부 표기: Tabling) =====
+       * 이 블록이 앱의 '기초 토큰'입니다. 색·타이포·간격·라운드·엘리베이션.
+       * 컴포넌트는 이 변수들을 참조해서 스타일을 맞춥니다. */
+
+    /* --- 색: 브랜드 --- */
+    --brand: #FF5A2C;      /* 모먹지 브랜드 오렌지 — 로고·강조에만, 넓게 칠하지 않음 */
+    --brand-tint: #fff7eb; /* 따뜻한 오렌지-크림 틴트 면 */
+    --brand-wash: #ffece8; /* 더 핑크빛 오렌지 워시 */
+
+    /* --- 색: 텍스트/잉크 --- */
     --black: #000000;      /* 헤딩용 순검정 */
     --ink: #2e3137;        /* 본문/UI 기본 (따뜻한 근검정 슬레이트) */
+    --ink-strong: #131517; /* 평점 등 강조 수치용 근검정 */
+    --slate: #505c81;      /* 구조적 라벨/보조 텍스트 */
     --gray-1: #6d7583;     /* 보조 텍스트 (뮤티드 슬레이트) */
     --gray-2: #969fac;     /* 최저강조 텍스트 (페인트 그레이) */
-    --line: #dfe3e6;       /* 얇은 구분선/테두리 (헤어라인) */
+
+    /* --- 색: 면/선 --- */
     --surface: #ffffff;    /* 카드/캔버스 흰색 */
     --bg: #f0f0f0;         /* 바깥/섹션 배경 (서피스 그레이) */
     --soft: #f8f9fa;       /* 가장 옅은 쿨그레이 (호버/소프트 면) */
+    --chip: #f0f4ff;       /* 칩/필터 틴트 (쿨 블루) */
+    --line: #dfe3e6;       /* 얇은 구분선/테두리 (헤어라인) */
+    --border: #d7dbdf;     /* 1px 카드 아웃라인 (헤어라인보다 약간 진함) */
     --danger: #c62828;
-    --brand: #FF5A2C;      /* 모먹지 브랜드 오렌지 — 로고·강조에만, 넓게 칠하지 않음 */
+
+    /* --- 타이포 스케일 (Pretendard, 굵기 주도 위계) --- */
+    --fs-hero: 24px;     --fw-hero: 700;      /* 히어로 헤딩 */
+    --fs-emphasis: 22px; --fw-emphasis: 700;  /* 강조 헤드라인 */
+    --fs-section: 20px;  --fw-section: 700;   /* 섹션 제목 */
+    --fs-title: 18px;    --fw-title: 700;     /* 리스트/카드 제목 */
+    --fs-search: 16px;   --fw-search: 600;    /* 검색 입력 */
+    --fs-body: 14px;     --fw-body: 400;      /* 본문/UI 기본 */
+    --fs-rating: 13px;   --fw-rating: 700;    /* 평점 값 */
+    --fs-meta: 13px;     --fw-meta: 400;      /* 메타데이터 */
+    --fs-badge: 12px;    --fw-badge: 700;     /* 배지 */
+    --lh-body: 1.5;
+
+    /* --- 간격 스케일 (4px 기반) --- */
+    --sp-xs: 4px; --sp-sm: 8px; --sp-md: 12px; --sp-base: 16px; --sp-lg: 24px; --sp-xl: 40px;
+
+    /* --- 라운드(모서리) 스케일 --- */
+    --r-xs: 4px; --r-sm: 8px; --r-md: 12px; --r-chip: 24px; --r-pill: 100px; --r-full: 9999px;
+
+    /* --- 엘리베이션: 플랫(그림자 없음)이 원칙 — 틴트/헤어라인으로 구분 --- */
+    --shadow-none: none;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    font-size: var(--fs-body); line-height: var(--lh-body);  /* [파운데이션] 본문 기본: 14px / 1.5 */
     background: var(--bg); color: var(--ink);
     display: flex; justify-content: center;
     padding: 24px 16px 90px; min-height: 100vh; -webkit-font-smoothing: antialiased;
