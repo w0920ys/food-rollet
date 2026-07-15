@@ -133,7 +133,7 @@
 
   /* 그룹 선택 드롭다운 */
   .group-dd { position: relative; }
-  .group-dd-btn { display: inline-flex; align-items: center; gap: 2px; min-height: 36px; padding: 6px 8px 6px 13px; border: 1.5px solid var(--border-default); border-radius: 999px; background: #fff; font-size: 14px; font-weight: 700; color: var(--text-body); cursor: pointer; }
+  .group-dd-btn { gap: 2px; min-height: 36px; padding: 6px 8px 6px 13px; border: 1.5px solid var(--border-default); font-size: 14px; font-weight: 700; color: var(--text-body); }
   .group-dd-btn .material-symbols-rounded { font-size: 20px; color: var(--text-secondary); }
   .group-dd-panel { display: none; position: absolute; top: calc(100% + 6px); left: 0; min-width: 180px; background: #fff; border: 1px solid var(--border-default); border-radius: 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.10); padding: 6px; z-index: 60; }
   .group-dd-panel.open { display: block; }
@@ -316,11 +316,15 @@
   .cg-toggle.on:hover { background: #262626; }
   .chip-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
   /* 칩: 최소 터치 높이 44px 확보, 기본은 border만 */
+  /* ===== [공통] pill 칩 베이스 — 선택형 칩들의 공유 골격 =====
+     모양(둥근 pill)/흰 배경/정렬을 한 곳에서 관리. 크기·색·테두리굵기는 각 칩이 개별 지정. */
+  .chip, .cat-tab, .cat-choice, .member-chip, .group-dd-btn {
+    display: inline-flex; align-items: center; cursor: pointer;
+    border-radius: var(--r-pill); background: var(--surface-card);
+  }
   .chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    min-height: 44px; padding: 0 16px;
-    border: 1.5px solid var(--border-default); border-radius: 999px;
-    background: #fff; cursor: pointer; user-select: none;
+    gap: 6px; min-height: 44px; padding: 0 16px;
+    border: 1.5px solid var(--border-default); user-select: none;
     transition: background .12s, border-color .12s;
     -webkit-tap-highlight-color: transparent;
   }
@@ -341,7 +345,7 @@
   .cat-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
   .cat-tabs::-webkit-scrollbar { height: 4px; }
   .cat-tabs::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 999px; }
-  .cat-tab { flex-shrink: 0; min-height: 34px; padding: 7px 14px; border: 1px solid var(--border-default); border-radius: 999px; background: #fff; font-size: 13px; font-weight: 700; color: var(--text-secondary); cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  .cat-tab { flex-shrink: 0; min-height: 34px; padding: 7px 14px; border: 1px solid var(--border-default); font-size: 13px; font-weight: 700; color: var(--text-secondary); white-space: nowrap; gap: 6px; }
   .cat-tab .tab-dot { width: 9px; height: 9px; border-radius: 999px; flex-shrink: 0; }
   .cat-tab.active { background: var(--state-selected); border-color: var(--border-strong); color: var(--text-on-fill); }
   .cat-tab .tab-cnt { font-size: 11px; opacity: 0.7; }
@@ -478,8 +482,9 @@
   .field label { display: block; font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; }
   .field .input { width: 100%; }
   .cat-choices { display: flex; flex-wrap: wrap; gap: 8px; }
-  .cat-choice { padding: 7px 14px; border: 1.5px solid var(--border-default); border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; background: #fff; color: var(--text-secondary); }
-  .cat-choice.active { color: var(--text-on-fill); border-color: transparent; }
+  .cat-choice { padding: 7px 14px; border: 1.5px solid var(--border-default); font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+  /* [공통] 칩 '선택됨(카테고리 색)' 상태 — bg는 JS가 카테고리 색으로 지정 */
+  .cat-choice.active, .member-chip.on { color: var(--text-on-fill); border-color: transparent; }
   .dialog-msg { font-size: 12px; color: var(--text-danger); min-height: 16px; margin-bottom: 10px; }
   .dialog-actions { display: flex; gap: 10px; margin-top: 4px; }
   .dialog-actions .btn { flex: 1; justify-content: center; }
@@ -491,8 +496,7 @@
   .cat-row-top .input { flex: 1; }
   .cat-members-lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
   .cat-members { display: flex; flex-wrap: wrap; gap: 6px; }
-  .member-chip { font-size: 12px; padding: 4px 9px; border-radius: 999px; border: 1.5px solid var(--border-default); cursor: pointer; background: #fff; color: var(--text-secondary); user-select: none; }
-  .member-chip.on { color: var(--text-on-fill); border-color: transparent; }
+  .member-chip { font-size: 12px; padding: 4px 9px; border: 1.5px solid var(--border-default); color: var(--text-secondary); user-select: none; }
   .add-cat-btn { display: flex; align-items: center; justify-content: center; gap: 5px; width: 100%; padding: 11px; border: 1.5px dashed var(--border-muted); border-radius: 11px; background: var(--surface-subtle); color: var(--text-secondary); font-weight: 700; cursor: pointer; margin-bottom: 8px; }
   .add-cat-btn .material-symbols-rounded { font-size: 18px; }
   .cat-add-menu { display: flex; gap: 6px; margin-top: 8px; }
