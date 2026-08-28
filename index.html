@@ -221,8 +221,9 @@
   .result-row { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; }
   .result { font-size: 24px; font-weight: 800; text-align: center; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 4px; }
   .slot-machine { margin-top: 6px; }
-  .result-actions { display: flex; gap: 2px; visibility: hidden; }
-  .result-actions.show { visibility: visible; }
+  /* 숨김 시 공간을 차지하지 않도록 display:none → '돌려라!'가 정확히 중앙 정렬됨 */
+  .result-actions { display: none; gap: 2px; }
+  .result-actions.show { display: flex; }
   .res-act-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--border-default); background: #fff; border-radius: 9px; cursor: pointer; color: var(--text-secondary); }
   .res-act-btn .material-symbols-rounded { font-size: 18px; }
   .result .sub { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
@@ -743,6 +744,22 @@
     <div class="dialog-actions">
       <button class="btn btn-soft" id="profClose">닫기</button>
       <button class="btn btn-primary" id="profSave">비밀번호 변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- 문의하기: 이메일 복사 팝업 -->
+<div class="overlay" id="contactOverlay">
+  <div class="dialog">
+    <h3>문의하기</h3>
+    <p class="auth-line">문의는 아래 이메일로 보내주세요.</p>
+    <div class="field">
+      <input type="text" id="contactEmail" class="input" value="w0920ys@gmail.com" readonly style="text-align:center;">
+    </div>
+    <div class="dialog-msg" id="contactMsg"></div>
+    <div class="dialog-actions">
+      <button class="btn btn-soft" id="contactClose">닫기</button>
+      <button class="btn btn-primary" id="contactCopy"><span class="material-symbols-rounded">content_copy</span>이메일 복사</button>
     </div>
   </div>
 </div>
@@ -1877,14 +1894,39 @@ $("lnbClose").onclick=closeLnb;
 lnbOverlay.addEventListener("click",(e)=>{ if(e.target===lnbOverlay) closeLnb(); });
 
 // [Part A] 앱 정보 팝업
-const APP_VERSION="1.0";
+const APP_VERSION="1.1";
 $("appVer").textContent=APP_VERSION;
 $("lnbAppInfo").onclick=()=>{ closeLnb(); $("appInfoOverlay").classList.add("open"); };
 $("appInfoClose").onclick=()=>$("appInfoOverlay").classList.remove("open");
 $("appInfoOverlay").addEventListener("click",(e)=>{ if(e.target.id==="appInfoOverlay") $("appInfoOverlay").classList.remove("open"); });
 
-// [Part A] 문의하기 → 메일 앱 열기
-$("lnbContact").onclick=()=>{ closeLnb(); location.href="mailto:w0920ys@gmail.com?subject="+encodeURIComponent("모먹지 문의"); };
+// [공용] 텍스트를 클립보드에 복사 (성공 시 onOk 콜백)
+function copyToClipboard(text, onOk){
+  const fallback=()=>{
+    try{
+      const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      document.execCommand("copy"); document.body.removeChild(ta); onOk&&onOk();
+    }catch(e){ window.prompt("아래를 복사하세요 (Ctrl/Cmd+C)", text); }
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>onOk&&onOk()).catch(fallback);
+  } else fallback();
+}
+
+// [Part A] 문의하기 → 이메일 복사 팝업
+const CONTACT_EMAIL="w0920ys@gmail.com";
+$("lnbContact").onclick=()=>{ closeLnb(); $("contactMsg").textContent=""; $("contactOverlay").classList.add("open"); };
+$("contactClose").onclick=()=>$("contactOverlay").classList.remove("open");
+$("contactOverlay").addEventListener("click",(e)=>{ if(e.target.id==="contactOverlay") $("contactOverlay").classList.remove("open"); });
+$("contactCopy").onclick=()=>{
+  copyToClipboard(CONTACT_EMAIL, ()=>{
+    const b=$("contactCopy");
+    b.classList.add("done"); b.innerHTML='<span class="material-symbols-rounded">check</span>복사됨';
+    $("contactMsg").textContent="이메일 주소가 복사됐어요.";
+    setTimeout(()=>{ b.classList.remove("done"); b.innerHTML='<span class="material-symbols-rounded">content_copy</span>이메일 복사'; }, 1600);
+  });
+};
 
 // [Part A] 회원 정보 관리 팝업 닫기 (열기·저장은 Supabase 모듈에서)
 $("profClose").onclick=()=>$("profileOverlay").classList.remove("open");
@@ -1906,7 +1948,7 @@ $("confirmYes").onclick=()=>{ const f=__confirmYes; closeConfirm(); if(f) f(); }
 $("confirmNo").onclick=closeConfirm;
 $("confirmOverlay").addEventListener("click",(e)=>{ if(e.target.id==="confirmOverlay") closeConfirm(); });
 
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(overlay.classList.contains("open"))closeDialog(); if(catOverlay.classList.contains("open"))closeCatManage(); if(copyOverlay.classList.contains("open"))closeCopyDialog(); if(groupOverlay.classList.contains("open"))closeGroupManage(); if(lnbOverlay.classList.contains("open"))closeLnb(); if($("confirmOverlay").classList.contains("open"))closeConfirm(); } });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(overlay.classList.contains("open"))closeDialog(); if(catOverlay.classList.contains("open"))closeCatManage(); if(copyOverlay.classList.contains("open"))closeCopyDialog(); if(groupOverlay.classList.contains("open"))closeGroupManage(); if(lnbOverlay.classList.contains("open"))closeLnb(); if($("confirmOverlay").classList.contains("open"))closeConfirm(); if($("contactOverlay").classList.contains("open"))$("contactOverlay").classList.remove("open"); } });
 
 load(); renderAll();
 </script>
