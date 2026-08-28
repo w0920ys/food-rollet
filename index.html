@@ -521,6 +521,15 @@
   .pf-nav-row .pf-ver { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-left: auto; }
   .pf-nav-row.solo { border: 1px solid var(--border-default); }
   .pf-sync { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-left: auto; }
+  /* 프로필 행의 2줄(제목+부제) 레이아웃 — 내 프로필/알림 요약 행에서 사용 */
+  .pf-nav-main { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; text-align: left; }
+  .pf-nav-title { font-size: 15px; font-weight: 700; color: var(--text-body); }
+  .pf-nav-sub { font-size: 12px; font-weight: 500; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* 뎁스(하위) 화면 상단 — 뒤로가기 + 제목 */
+  .pf-depth-head { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .pf-back { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 9px; color: var(--text-body); cursor: pointer; flex-shrink: 0; }
+  .pf-back:hover { background: var(--surface-subtle); }
+  .pf-depth-title { font-size: 17px; font-weight: 800; }
   .pf-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 50px; padding: 10px 14px; font-size: 14px; font-weight: 700; color: var(--text-body); cursor: pointer; user-select: none; }
   .pf-div { border: none; border-top: 1px solid var(--border-default); margin: 8px 6px; }
   .pf-msg { font-size: 12px; color: var(--text-secondary); min-height: 15px; padding: 0 14px 8px; }
@@ -553,6 +562,27 @@
   /* [공용] 토스트 */
   .toast { position: fixed; left: 50%; bottom: 80px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 999px; font-size: 13px; font-weight: 700; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 400; max-width: 90%; text-align: center; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* [홈 배너] 알림 미설정 시 슬롯 탭 상단 안내 */
+  .notify-banner { margin-bottom: 20px; }
+  .notify-banner-row { display: flex; align-items: flex-start; gap: 10px; }
+  .notify-banner-row > .material-symbols-rounded { font-size: 22px; color: var(--surface-brand); flex-shrink: 0; margin-top: 1px; }
+  .notify-banner-text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .notify-banner-text b { font-size: 14px; font-weight: 800; color: var(--text-body); }
+  .notify-banner-text span { font-size: 12px; color: var(--text-secondary); }
+  .notify-banner-x { border: none; background: none; color: var(--text-muted); cursor: pointer; width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+  .notify-banner-x:hover { background: var(--surface-subtle); }
+
+  /* [함께 정하기] 룸 */
+  .room-code { font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.08em; }
+  .room-reel { height: 52px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: var(--text-body); background: var(--surface-subtle); border-radius: 12px; margin-bottom: 4px; overflow: hidden; }
+  .room-winner { text-align: center; font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; min-height: 18px; }
+  .room-entry-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border-default); border-radius: 10px; margin-bottom: 6px; }
+  .room-entry-row .re-name { font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .room-entry-row .re-menu { margin-left: auto; font-size: 13px; color: var(--text-secondary); text-align: right; }
+  .room-entry-row .re-menu.pending { color: var(--text-muted); font-style: italic; }
+  .room-entry-row.is-winner { border-color: var(--border-strong); background: #fafafa; }
+  .room-entry-empty { text-align: center; color: var(--text-muted); font-size: 13px; padding: 16px 0; }
 </style>
 </head>
 <body>
@@ -579,8 +609,8 @@
       </svg>
     </span>
 
-    <!-- 그룹 선택 드롭다운 (로그인 시에만 표시; 모듈이 display 제어) -->
-    <div class="group-dd" id="groupDd" style="display:none;">
+    <!-- 그룹 선택 드롭다운 (로그인 여부와 무관하게 항상 표시. 그룹 추가/수정/삭제만 로그인 필요) -->
+    <div class="group-dd" id="groupDd">
       <button class="group-dd-btn" id="groupDdBtn"><span id="groupDdLabel">기본</span><span class="material-symbols-rounded">expand_more</span></button>
       <div class="group-dd-panel" id="groupDdPanel">
         <div id="groupDdList"></div>
@@ -592,6 +622,19 @@
   </header>
 
   <div class="tab-page active" id="page-slot">
+    <!-- [알림 배너] 알림을 켜지 않았을 때만 노출 -->
+    <div class="card notify-banner" id="notifyBanner" style="display:none;">
+      <div class="notify-banner-row">
+        <span class="material-symbols-rounded">notifications_active</span>
+        <div class="notify-banner-text">
+          <b>퇴근 시간 알림을 받아보세요</b>
+          <span>오늘 뭐 먹을지 깜빡하지 않게 알려드려요</span>
+        </div>
+        <button class="notify-banner-x" id="notifyBannerX" title="닫기"><span class="material-symbols-rounded">close</span></button>
+      </div>
+      <button class="btn btn-brand btn-sm" id="notifyBannerBtn" style="width:100%;justify-content:center;margin-top:10px;">알림 켜기</button>
+    </div>
+
     <div class="card slot-wrap">
       <div class="slot-machine">
         <div class="win-line"></div>
@@ -692,9 +735,101 @@
 
   <!-- ===== [프로필 탭] 계정 · 그룹관리 · 설정 · 지원 · 공유 ===== -->
   <div class="tab-page" id="page-profile">
-    <!-- 내 프로필 -->
-    <section class="pf-section">
-      <h2 class="pf-h">내 프로필</h2>
+
+    <!-- ---------- 뎁스 1: 메인 화면 ---------- -->
+    <div id="pfMain">
+      <!-- 내 프로필 (요약 행 — 클릭 시 로그인 상태면 수정 화면으로, 아니면 로그인 플로우로) -->
+      <section class="pf-section">
+        <h2 class="pf-h">내 프로필</h2>
+        <div class="pf-card" style="padding:0;">
+          <button class="pf-nav-row" id="pfProfileRow">
+            <span class="material-symbols-rounded">account_circle</span>
+            <span class="pf-nav-main">
+              <span class="pf-nav-title" id="pfProfileTitle">로그인이 필요해요</span>
+              <span class="pf-nav-sub" id="pfProfileSub">로그인하면 닉네임 설정과 클라우드 백업을 이용할 수 있어요</span>
+            </span>
+            <span class="material-symbols-rounded pf-chev">chevron_right</span>
+          </button>
+        </div>
+        <!-- 로그인 안 했을 때만 노출되는 큰 CTA (로그인 화면/비로그인 화면을 명확히 구분) -->
+        <div id="pfLoginCta" style="padding:10px 4px 0;">
+          <button class="btn btn-primary" id="pfLoginBtn" style="width:100%;justify-content:center;">로그인 / 회원가입</button>
+        </div>
+      </section>
+
+      <!-- 그룹관리 (로그인 여부와 무관하게 노출, 추가/수정/삭제만 로그인 필요) -->
+      <section class="pf-section">
+        <div class="pf-card" style="padding:0;">
+          <button class="pf-nav-row" id="pfGroups">
+            <span class="material-symbols-rounded">groups</span><span>그룹관리</span>
+            <span class="material-symbols-rounded pf-chev">chevron_right</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 설정 -->
+      <section class="pf-section">
+        <h2 class="pf-h">설정</h2>
+        <div class="pf-card" style="padding:0;">
+          <button class="pf-nav-row" id="pfNotifyRow">
+            <span class="material-symbols-rounded">notifications</span>
+            <span class="pf-nav-main">
+              <span class="pf-nav-title">푸시알림</span>
+              <span class="pf-nav-sub" id="pfNotifySummary">꺼짐</span>
+            </span>
+            <span class="material-symbols-rounded pf-chev">chevron_right</span>
+          </button>
+          <button class="pf-nav-row" id="pfUpdate">
+            <span class="material-symbols-rounded">system_update</span><span>버전 최신 업데이트</span>
+            <span class="pf-ver" id="pfVer"></span>
+          </button>
+          <button class="pf-nav-row" id="pfInstall" style="display:none;">
+            <span class="material-symbols-rounded">install_mobile</span><span>홈화면 설치</span>
+            <span class="material-symbols-rounded pf-chev">chevron_right</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 지원 -->
+      <section class="pf-section">
+        <h2 class="pf-h">지원</h2>
+        <div class="pf-card">
+          <button class="pf-nav-row" id="pfHelp">
+            <span class="material-symbols-rounded">help</span><span>도움이 필요하신가요?</span>
+            <span class="material-symbols-rounded pf-chev">chevron_right</span>
+          </button>
+          <button class="pf-nav-row" id="pfFeedback">
+            <span class="material-symbols-rounded">rate_review</span><span>피드백 남기기</span>
+            <span class="material-symbols-rounded pf-chev">chevron_right</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 공유 -->
+      <section class="pf-section">
+        <div class="pf-card" style="padding:0;">
+          <button class="pf-nav-row" id="pfShare">
+            <span class="material-symbols-rounded">share</span><span>친구에게 공유하기</span>
+            <span class="material-symbols-rounded pf-chev">chevron_right</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 하단 텍스트 버튼 -->
+      <div class="pf-foot">
+        <button class="pf-text-btn" id="pfTerms">이용약관</button>
+        <button class="pf-text-btn" id="pfPrivacy">개인정보처리방침</button>
+        <button class="pf-text-btn" id="pfLogout" style="display:none;">로그아웃</button>
+        <button class="pf-text-btn danger" id="pfWithdraw" style="display:none;">회원탈퇴</button>
+      </div>
+    </div>
+
+    <!-- ---------- 뎁스 2: 내 프로필 수정 (로그인 상태에서만 진입) ---------- -->
+    <div id="pfEditView" style="display:none;">
+      <div class="pf-depth-head">
+        <button class="pf-back" id="pfEditBack" title="뒤로"><span class="material-symbols-rounded">arrow_back</span></button>
+        <span class="pf-depth-title">내 프로필</span>
+      </div>
       <div class="pf-card">
         <div class="pf-row">
           <span class="pf-label">닉네임</span>
@@ -702,39 +837,28 @@
         </div>
         <div class="pf-row">
           <span class="pf-label">아이디</span>
-          <span class="pf-value" id="pfId">로그인 필요</span>
+          <span class="pf-value" id="pfId">-</span>
         </div>
         <div class="pf-row">
           <span class="pf-label">이메일주소</span>
-          <span class="pf-value" id="pfEmail">로그인 필요</span>
-        </div>
-        <div class="pf-row" id="pfBackupRow" style="display:none;padding:0;">
-          <button class="pf-nav-row" id="pfBackup" style="min-height:50px;">
-            <span class="material-symbols-rounded">cloud_upload</span><span>내 데이터 백업하기</span>
-            <span class="pf-sync" id="pfSync"></span>
-          </button>
+          <span class="pf-value" id="pfEmail">-</span>
         </div>
       </div>
       <div style="padding:10px 4px 0;">
-        <button class="btn btn-primary" id="pfLoginBtn" style="width:100%;justify-content:center;">로그인 / 회원가입</button>
-      </div>
-    </section>
-
-    <!-- 그룹관리 -->
-    <section class="pf-section">
-      <div class="pf-card" style="padding:0;">
-        <button class="pf-nav-row" id="pfGroups">
-          <span class="material-symbols-rounded">groups</span><span>그룹관리</span>
-          <span class="material-symbols-rounded pf-chev">chevron_right</span>
+        <button class="pf-nav-row solo" id="pfBackup">
+          <span class="material-symbols-rounded">cloud_upload</span><span>내 데이터 백업하기</span>
+          <span class="pf-sync" id="pfSync"></span>
         </button>
       </div>
-    </section>
+    </div>
 
-    <!-- 설정 -->
-    <section class="pf-section">
-      <h2 class="pf-h">설정</h2>
+    <!-- ---------- 뎁스 2: 알림 설정 ---------- -->
+    <div id="pfNotifyView" style="display:none;">
+      <div class="pf-depth-head">
+        <button class="pf-back" id="pfNotifyBack" title="뒤로"><span class="material-symbols-rounded">arrow_back</span></button>
+        <span class="pf-depth-title">알림 설정</span>
+      </div>
       <div class="pf-card">
-        <div class="pf-sub">푸시알림</div>
         <label class="pf-switch-row">
           <span>알림 받기</span>
           <span class="switch"><input type="checkbox" id="pfNotifyEnabled"><span class="slider"></span></span>
@@ -746,49 +870,7 @@
         <div class="pf-sub" style="padding-top:8px;">알림 요일</div>
         <div class="pf-dow-wrap" id="pfDow"></div>
         <div class="pf-msg" id="pfNotifyMsg"></div>
-        <hr class="pf-div">
-        <button class="pf-nav-row" id="pfUpdate">
-          <span class="material-symbols-rounded">system_update</span><span>버전 최신 업데이트</span>
-          <span class="pf-ver" id="pfVer"></span>
-        </button>
-        <button class="pf-nav-row" id="pfInstall" style="display:none;">
-          <span class="material-symbols-rounded">install_mobile</span><span>홈화면 설치</span>
-          <span class="material-symbols-rounded pf-chev">chevron_right</span>
-        </button>
       </div>
-    </section>
-
-    <!-- 지원 -->
-    <section class="pf-section">
-      <h2 class="pf-h">지원</h2>
-      <div class="pf-card">
-        <button class="pf-nav-row" id="pfHelp">
-          <span class="material-symbols-rounded">help</span><span>도움이 필요하신가요?</span>
-          <span class="material-symbols-rounded pf-chev">chevron_right</span>
-        </button>
-        <button class="pf-nav-row" id="pfFeedback">
-          <span class="material-symbols-rounded">rate_review</span><span>피드백 남기기</span>
-          <span class="material-symbols-rounded pf-chev">chevron_right</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- 공유 -->
-    <section class="pf-section">
-      <div class="pf-card" style="padding:0;">
-        <button class="pf-nav-row" id="pfShare">
-          <span class="material-symbols-rounded">share</span><span>친구에게 공유하기</span>
-          <span class="material-symbols-rounded pf-chev">chevron_right</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- 하단 텍스트 버튼 -->
-    <div class="pf-foot">
-      <button class="pf-text-btn" id="pfTerms">이용약관</button>
-      <button class="pf-text-btn" id="pfPrivacy">개인정보처리방침</button>
-      <button class="pf-text-btn" id="pfLogout" style="display:none;">로그아웃</button>
-      <button class="pf-text-btn danger" id="pfWithdraw" style="display:none;">회원탈퇴</button>
     </div>
   </div>
 </div>
@@ -966,6 +1048,38 @@
   </div>
 </div>
 
+<!-- [함께 정하기] 친구들과 같이 슬롯 돌려서 메뉴 정하는 방 -->
+<div class="overlay" id="roomOverlay">
+  <div class="dialog">
+    <h3>함께 정하기</h3>
+    <p class="auth-line">방 코드 <b class="room-code" id="roomCodeLabel">------</b><br><span id="roomStatusLabel">각자 먹고 싶은 메뉴를 적으면, 방장이 다같이 슬롯을 돌려요.</span></p>
+
+    <div id="roomReveal" style="display:none;">
+      <div class="room-reel" id="roomReel">?</div>
+      <div class="room-winner" id="roomWinnerText"></div>
+    </div>
+
+    <div class="field" id="roomEntryField">
+      <label>내가 먹고 싶은 메뉴</label>
+      <div class="cat-add-menu">
+        <input type="text" id="roomMenuInput" class="input" maxlength="16" placeholder="예: 초밥">
+        <button class="mini-add" id="roomSubmitBtn" title="제출"><span class="material-symbols-rounded">check</span></button>
+      </div>
+    </div>
+
+    <div class="pf-sub" style="padding:4px 2px 6px;">참여자 (<span id="roomEntryCount">0</span>)</div>
+    <div id="roomEntryList" style="margin-bottom:8px;"></div>
+
+    <div class="dialog-actions" id="roomHostActions" style="display:none;">
+      <button class="btn btn-brand" id="roomSpinBtn" style="flex:1;justify-content:center;"><span class="material-symbols-rounded">casino</span>다같이 돌리기!</button>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn btn-soft" id="roomShareAgainBtn"><span class="material-symbols-rounded">share</span>초대 문구 복사</button>
+      <button class="btn btn-primary" id="roomClose" style="flex:1;justify-content:center;">닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- [로그인] 로그인/회원가입 팝업 -->
 <div class="overlay" id="authOverlay">
   <div class="dialog">
@@ -1078,6 +1192,7 @@ let menus = [], excluded = new Set();
 let favorites = new Set();      // [4단계] 즐겨찾기 메뉴 이름 (슬롯에서 뽑힐 확률 2배 + 별표)
 let notify = { enabled:false, time:"18:30", days:[0,1,2,3,4,5,6] };  // [6단계] 퇴근 알림 설정: days는 요일(0=일~6=토) (클라우드 동기화)
 let nickname = "";              // [프로필] 닉네임
+window.getNickname = function(){ return nickname; };  // module 스크립트(Supabase)가 닉네임을 읽을 때 사용
 // 유저 그룹 (당첨 기록/후보/못 먹는 음식은 그룹별 분리, 메뉴·카테고리는 공용)
 let groups = [
   { id:"default", name:"나 혼자 먹을 때" },
@@ -2009,9 +2124,11 @@ function switchTab(tab){
   document.querySelectorAll(".tab-page").forEach(p=>p.classList.remove("active"));
   $("page-"+tab).classList.add("active");
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
-  // (헤더의 그룹 드롭다운 표시 여부는 로그인 상태에 따라 renderAuthView가 관리)
+  // [요청] 그룹 선택 드롭다운은 슬롯 탭에서만 노출
+  groupDd.style.display = (tab==="slot") ? "" : "none";
   if(tab==="history") renderHistory();
-  if(tab==="profile") renderProfileTab();
+  if(tab==="profile"){ showProfileDepth("pfMain"); renderProfileTab(); }
+  if(tab==="slot") renderNotifyBanner();
 }
 function switchSubTab(sub){
   document.querySelectorAll(".sub-tab").forEach(b=>b.classList.toggle("active", b.dataset.sub===sub));
@@ -2054,18 +2171,21 @@ function renderGroupManage(){
   });
 }
 function addGroup(){
+  if(window.requireLogin && !window.requireLogin()) return;   // [로그인 게이트] 그룹 추가는 로그인 필요
   let base="새 그룹", name=base, n=1; while(groups.some(g=>g.name===name)){ n++; name=base+n; }
   const id="g"+Date.now();
   groups.push({id, name}); picksAll[id]={}; finalsAll[id]={}; orderAll[id]={}; dislikesAll[id]=[];
-  save(); renderGroupManage(); renderGroupBar();
+  save(); renderGroupManage(); renderGroupBar(); showToast("그룹이 추가됐어요.");
 }
 function renameGroup(id, newName){
+  if(window.requireLogin && !window.requireLogin()){ renderGroupManage(); return; }  // [로그인 게이트] 그룹 이름 수정은 로그인 필요
   if(!newName){ renderGroupManage(); return; }
   if(groups.some(g=>g.name===newName && g.id!==id)){ groupMsg.textContent="이미 있는 그룹 이름입니다."; renderGroupManage(); return; }
   const g=groups.find(x=>x.id===id); if(g) g.name=newName;
-  groupMsg.textContent=""; save(); renderGroupManage(); renderGroupBar();
+  groupMsg.textContent=""; save(); renderGroupManage(); renderGroupBar(); showToast("그룹 이름이 변경됐어요.");
 }
 function deleteGroup(id){
+  if(window.requireLogin && !window.requireLogin()) return;   // [로그인 게이트] 그룹 삭제는 로그인 필요
   if(groups.length<=1) return;
   if(!confirm("이 그룹의 당첨 기록이 모두 삭제됩니다. 계속할까요?")) return;
   groups=groups.filter(g=>g.id!==id);
@@ -2073,6 +2193,7 @@ function deleteGroup(id){
   if(activeGroup===id){ activeGroup=groups[0].id; loadActiveGroupView(); selectedDate=dateKey(Date.now()); }
   save(); renderGroupManage(); renderGroupBar(); renderTodayList(); renderIdleReel(); renderPoolInfo();
   if($("page-history").classList.contains("active")) renderHistory();
+  showToast("그룹을 삭제했어요.");
 }
 
 document.querySelectorAll(".sub-tab").forEach(b=>b.onclick=()=>switchSubTab(b.dataset.sub));
@@ -2112,7 +2233,7 @@ groupOverlay.addEventListener("click",e=>{ if(e.target===groupOverlay) closeGrou
 groupDdBtn.onclick=(e)=>{ e.stopPropagation(); groupDdPanel.classList.toggle("open"); };
 document.addEventListener("click",(e)=>{ if(groupDdPanel.classList.contains("open") && !groupDd.contains(e.target)) groupDdPanel.classList.remove("open"); });
 
-const APP_VERSION="1.5";
+const APP_VERSION="1.6";
 $("pfVer").textContent="v"+APP_VERSION;
 
 // [공용] 텍스트를 클립보드에 복사 (성공 시 onOk 콜백)
@@ -2283,6 +2404,7 @@ function renderDowChips(){
       if(set.has(d.v)) set.delete(d.v); else set.add(d.v);
       notify.days=[...set]; save(); renderDowChips();
       $("pfNotifyMsg").textContent="알림 요일이 저장됐어요.";
+      if($("pfNotifySummary")) $("pfNotifySummary").textContent = notifySummaryText();
     };
     wrap.appendChild(b);
   });
@@ -2293,8 +2415,30 @@ function renderNotifySettings(){
   $("pfNotifyTime").value = notify.time || "18:30";
   renderDowChips();
 }
+// 알림 요약 문구 (예: "매일 오후 6:30" / "월,수,금 오후 6:30" / "꺼짐")
+function notifySummaryText(){
+  if(!notify.enabled) return "꺼짐";
+  const days = notify.days && notify.days.length ? notify.days : [0,1,2,3,4,5,6];
+  const dayLabel = days.length===7 ? "매일" : DOW_UI.filter(d=>days.includes(d.v)).map(d=>d.lbl).join(",");
+  const [h,m] = (notify.time||"18:30").split(":").map(Number);
+  const ap = h<12 ? "오전" : "오후"; const h12 = h%12===0?12:h%12;
+  return dayLabel+" "+ap+" "+h12+":"+String(m).padStart(2,"0");
+}
+// [홈 배너] 알림을 안 켰을 때 슬롯 탭 상단에 켜기 안내 배너
+function renderNotifyBanner(){
+  const el=$("notifyBanner"); if(!el) return;
+  const dismissed = (function(){ try{ return localStorage.getItem("notifyBannerDismissed")==="1"; }catch(e){ return false; } })();
+  el.style.display = (!notify.enabled && !dismissed) ? "block" : "none";
+}
+$("notifyBannerX").onclick = ()=>{ try{ localStorage.setItem("notifyBannerDismissed","1"); }catch(e){} renderNotifyBanner(); };
+$("notifyBannerBtn").onclick = ()=>{ switchTab("profile"); showProfileDepth("pfNotifyView"); };
+
 $("pfNotifyEnabled").onchange = async ()=>{
   if($("pfNotifyEnabled").checked){
+    // 로그인 안 돼있으면 권한 요청 전에 먼저 로그인 유도
+    if(window.requireLogin && !window.requireLogin({msg:"알림을 받으려면 로그인이 필요해요. 로그인할까요?"})){
+      $("pfNotifyEnabled").checked=false; return;
+    }
     if(typeof Notification!=="undefined" && Notification.requestPermission){
       let perm = Notification.permission;
       if(perm==="default") perm = await Notification.requestPermission();
@@ -2307,14 +2451,19 @@ $("pfNotifyEnabled").onchange = async ()=>{
       $("pfNotifyMsg").textContent = (res.reason==="로그인 필요") ? "알림을 받으려면 먼저 로그인해주세요." : ("알림 설정 실패: "+res.reason);
       return;
     }
-    notify.enabled=true; $("pfNotifyMsg").textContent="알림이 켜졌어요!";
+    notify.enabled=true; $("pfNotifyMsg").textContent="알림이 켜졌어요!"; showToast("알림이 켜졌어요! 🔔");
   } else {
     notify.enabled=false; if(window.unsubscribePush) await window.unsubscribePush();
-    $("pfNotifyMsg").textContent="알림을 껐어요.";
+    $("pfNotifyMsg").textContent="알림을 껐어요."; showToast("알림을 껐어요.");
   }
-  save();
+  save(); renderNotifyBanner();
+  if($("pfNotifySummary")) $("pfNotifySummary").textContent = notifySummaryText();
 };
-$("pfNotifyTime").onchange = ()=>{ notify.time = $("pfNotifyTime").value || "18:30"; save(); $("pfNotifyMsg").textContent="알림 시간이 저장됐어요."; };
+$("pfNotifyTime").onchange = ()=>{
+  notify.time = $("pfNotifyTime").value || "18:30"; save();
+  $("pfNotifyMsg").textContent="알림 시간이 저장됐어요."; showToast("알림 시간이 저장됐어요.");
+  if($("pfNotifySummary")) $("pfNotifySummary").textContent = notifySummaryText();
+};
 
 // [Part A] 회원 정보 관리 팝업 닫기 (열기·저장은 Supabase 모듈에서)
 $("profClose").onclick=()=>$("profileOverlay").classList.remove("open");
@@ -2338,12 +2487,30 @@ $("confirmOverlay").addEventListener("click",(e)=>{ if(e.target.id==="confirmOve
 
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(overlay.classList.contains("open"))closeDialog(); if(catOverlay.classList.contains("open"))closeCatManage(); if(copyOverlay.classList.contains("open"))closeCopyDialog(); if(groupOverlay.classList.contains("open"))closeGroupManage(); if($("confirmOverlay").classList.contains("open"))closeConfirm(); if($("contactOverlay").classList.contains("open"))$("contactOverlay").classList.remove("open"); } });
 
-/* ===== [프로필 탭] 나머지 항목들 ===== */
+/* ===== [프로필 탭] 뎁스(하위 화면) 내비게이션 =====
+   pfMain(메인) · pfEditView(내 프로필 수정) · pfNotifyView(알림 설정) 중 하나만 보여줌. */
+function showProfileDepth(view){
+  ["pfMain","pfEditView","pfNotifyView"].forEach(id=>{ const el=$(id); if(el) el.style.display = (id===view) ? "block" : "none"; });
+  if(view==="pfNotifyView") renderNotifySettings();
+  if(view==="pfEditView") $("pfNick").value = nickname || "";
+}
+$("pfEditBack").onclick=()=>showProfileDepth("pfMain");
+$("pfNotifyBack").onclick=()=>showProfileDepth("pfMain");
+$("pfNotifyRow").onclick=()=>showProfileDepth("pfNotifyView");
+// [내 프로필] 요약 행 클릭 → 로그인 상태면 수정 화면, 아니면 로그인 플로우로 (module 스크립트에서 wiring)
+
 // 닉네임 입력 (blur/Enter 시 저장)
-$("pfNick").addEventListener("change", ()=>{ nickname=$("pfNick").value.trim(); save(); });
+$("pfNick").addEventListener("change", ()=>{
+  nickname=$("pfNick").value.trim(); save();
+  if(window.renderProfileSummary) window.renderProfileSummary();
+  showToast("닉네임이 저장됐어요.");
+});
 function renderProfileTab(){
   $("pfNick").value = nickname || "";
   renderNotifySettings();
+  if($("pfNotifySummary")) $("pfNotifySummary").textContent = notifySummaryText();
+  if(window.renderProfileSummary) window.renderProfileSummary();
+  renderNotifyBanner();
 }
 // 그룹관리 (헤더 드롭다운의 '그룹 관리'와 동일한 팝업)
 $("pfGroups").onclick=openGroupManage;
@@ -2375,16 +2542,22 @@ $("feedbackSend").onclick=async ()=>{
     $("feedbackMsg").textContent="전송 실패했어요. 잠시 후 다시 시도해주세요.";
   }
 };
-// [공유] 친구에게 공유하기
-$("pfShare").onclick=async ()=>{
-  const shareData={ title:"모먹지", text:"오늘 뭐 먹지? 고민될 땐 모먹지!", url:window.location.origin };
-  if(navigator.share){ try{ await navigator.share(shareData); }catch(e){} }
-  else { copyToClipboard(shareData.url, ()=>showToast("링크가 복사됐어요.")); }
-};
+// [공유=함께 정하기] 친구에게 공유하기 → '함께 정하기' 방을 만들어서 카톡 등으로 공유 (로그인 필요, module 스크립트에서 구현)
+$("pfShare").onclick=()=>{ if(window.createAndShareRoom) window.createAndShareRoom(); };
 
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("dislikeOverlay").classList.contains("open")){ $("dislikeOverlay").classList.remove("open"); renderAll(); } if($("feedbackOverlay").classList.contains("open")) $("feedbackOverlay").classList.remove("open"); } });
+// [함께 정하기] 방 다이얼로그 공통 UI 동작 (열기/닫기, 내용 렌더는 module 스크립트가 담당)
+function closeRoomOverlay(){ $("roomOverlay").classList.remove("open"); if(window.unsubscribeRoomChannel) window.unsubscribeRoomChannel(); }
+$("roomClose").onclick=closeRoomOverlay;
+$("roomOverlay").addEventListener("click",(e)=>{ if(e.target.id==="roomOverlay") closeRoomOverlay(); });
+$("roomMenuInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); if(window.submitRoomEntry) window.submitRoomEntry(); } });
+$("roomSubmitBtn").onclick=()=>{ if(window.submitRoomEntry) window.submitRoomEntry(); };
+$("roomSpinBtn").onclick=()=>{ if(window.spinRoom) window.spinRoom(); };
+$("roomShareAgainBtn").onclick=()=>{ if(window.shareCurrentRoom) window.shareCurrentRoom(); };
 
-load(); renderAll(); renderProfileTab();
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("dislikeOverlay").classList.contains("open")){ $("dislikeOverlay").classList.remove("open"); renderAll(); } if($("feedbackOverlay").classList.contains("open")) $("feedbackOverlay").classList.remove("open"); if($("roomOverlay").classList.contains("open")) closeRoomOverlay(); } });
+
+groupDd.style.display = "";  // [요청] 그룹 드롭다운은 슬롯 탭에서만 — 기본 활성 탭이 슬롯이므로 처음엔 노출
+load(); renderAll(); renderProfileTab(); renderNotifyBanner();
 </script>
 
 <!-- ===== PWA 서비스워커 등록 =====
@@ -2468,12 +2641,17 @@ const authOverlay = $("authOverlay");
 const boxOut = $("authLoggedOut"), boxIn = $("authLoggedIn");
 const emailEl = $("authEmail"), passEl = $("authPass"), msgEl = $("authMsg");
 // [프로필 탭] 계정 표시 요소
-const pfId = $("pfId"), pfEmail = $("pfEmail"), pfBackupRow = $("pfBackupRow"), syncEl = $("pfSync");
+const pfId = $("pfId"), pfEmail = $("pfEmail"), syncEl = $("pfSync");
 const pfLoginBtn = $("pfLoginBtn"), pfLogoutBtn = $("pfLogout"), pfWithdrawBtn = $("pfWithdraw");
+const pfLoginCta = $("pfLoginCta"), pfProfileTitle = $("pfProfileTitle"), pfProfileSub = $("pfProfileSub");
 
 let currentUser = null;   // 현재 로그인한 사용자 (없으면 null)
 let syncedUserId = null;  // 이미 동기화를 마친 사용자 id (중복 방지)
 let pushTimer = null;     // 저장 몰아서 보내기용 타이머
+// [함께 정하기] 카톡 등에서 '?room=CODE' 링크로 들어온 경우, 로그인 상태가 확정된 뒤 한 번만 자동 입장 처리
+let urlRoomCode = null;
+try{ urlRoomCode = new URLSearchParams(window.location.search).get("room"); }catch(e){}
+let urlRoomHandled = false;
 
 // ---- 팝업 열고 닫기 ----
 function openAuth(){ msgEl.textContent=""; renderAuthView(); authOverlay.classList.add("open"); }
@@ -2485,17 +2663,49 @@ function renderAuthView(){
   // 로그인 팝업: 항상 로그인 폼만 사용 (로그인 상태 표시는 프로필 탭에서)
   boxOut.style.display = on ? "none" : "block";
   boxIn.style.display  = "none";
-  // [프로필 탭] 아이디/이메일/백업 행 + 로그인·로그아웃·탈퇴 버튼 전환
-  if(pfId) pfId.textContent = on ? (currentUser.email||"").split("@")[0] : "로그인 필요";
-  if(pfEmail) pfEmail.textContent = on ? (currentUser.email||"") : "로그인 필요";
-  if(pfBackupRow) pfBackupRow.style.display = on ? "block" : "none";  // [요청] 클라우드 백업은 로그인 시에만 노출
-  if(pfLoginBtn) pfLoginBtn.style.display = on ? "none" : "flex";
+  // [프로필 탭 - 뎁스2 '내 프로필 수정'] 아이디/이메일 표시
+  if(pfId) pfId.textContent = on ? (currentUser.email||"").split("@")[0] : "-";
+  if(pfEmail) pfEmail.textContent = on ? (currentUser.email||"") : "-";
+  // [프로필 탭 - 메인] 로그인/로그아웃/탈퇴 버튼 전환 — 로그인 화면·비로그인 화면을 명확히 구분
+  if(pfLoginCta) pfLoginCta.style.display = on ? "none" : "block";
   if(pfLogoutBtn) pfLogoutBtn.style.display = on ? "inline" : "none";
   if(pfWithdrawBtn) pfWithdrawBtn.style.display = on ? "inline" : "none";
-  // [그룹 기능] 로그인했을 때만 헤더 그룹 드롭다운을 보여줌
-  const gd = document.getElementById("groupDd");
-  if(gd) gd.style.display = on ? "block" : "none";
+  window.renderProfileSummary();
+  // [그룹 기능] 헤더 그룹 드롭다운은 로그인 여부와 무관하게 항상 노출 (그룹 추가/수정/삭제만 로그인 필요)
 }
+
+// [프로필 탭] '내 프로필' 요약 행(제목/부제) 갱신 — 닉네임은 classic 스크립트의 window.getNickname()으로 읽음
+window.renderProfileSummary = function(){
+  if(!pfProfileTitle || !pfProfileSub) return;
+  const nn = (window.getNickname && window.getNickname()) || "";
+  if(currentUser){
+    pfProfileTitle.textContent = nn.trim() ? nn.trim() : (currentUser.email||"").split("@")[0];
+    pfProfileSub.textContent = currentUser.email || "";
+  } else {
+    pfProfileTitle.textContent = "로그인이 필요해요";
+    pfProfileSub.textContent = "로그인하면 닉네임 설정과 클라우드 백업을 이용할 수 있어요";
+  }
+};
+// [내 프로필] 요약 행 클릭 → 로그인 상태면 수정 화면(뎁스2)으로, 아니면 로그인 플로우로
+$("pfProfileRow").onclick = () => {
+  if(currentUser){ if(window.showProfileDepth) window.showProfileDepth("pfEditView"); }
+  else openAuth();
+};
+
+// 그룹 추가·수정·삭제, 알림 켜기 등 '쓰기' 동작 전 로그인 확인.
+// 로그인 안 돼있으면 안내 팝업 → '로그인' 선택 시 (있다면) 원래 열려있던 창을 닫고 로그인 플로우로 진행.
+window.requireLogin = function(opts){
+  opts = opts || {};
+  if(currentUser) return true;
+  if(window.showConfirm){
+    window.showConfirm(
+      opts.msg || "그룹을 추가하거나 수정하려면 로그인이 필요해요. 로그인할까요?",
+      ()=>{ if(window.closeGroupManage) window.closeGroupManage(); openAuth(); },
+      { title: opts.title || "로그인이 필요해요", yes:"로그인", no:"취소" }
+    );
+  }
+  return false;
+};
 
 // ---- 클라우드에서 내 데이터 한 줄 읽기 ----
 async function cloudPull(){
@@ -2507,12 +2717,12 @@ async function cloudPull(){
 
 // ---- 현재 앱 데이터를 클라우드에 저장(덮어쓰기) ----
 async function cloudPush(){
-  if(!currentUser) return;
+  if(!currentUser) return false;
   const blob = window.getStateBlob();
   const { error } = await supabase.from("user_data")
     .upsert({ user_id: currentUser.id, data: blob, updated_at: new Date().toISOString() });
-  if(error){ console.log("cloudPush 오류:", error); syncEl.style.color = "var(--text-danger)"; syncEl.textContent = "클라우드 저장 실패: " + error.message; }
-  else { syncEl.style.color = ""; syncEl.textContent = "클라우드에 저장됨"; }
+  if(error){ console.log("cloudPush 오류:", error); syncEl.style.color = "var(--text-danger)"; syncEl.textContent = "클라우드 저장 실패: " + error.message; return false; }
+  syncEl.style.color = ""; syncEl.textContent = "클라우드에 저장됨"; return true;
 }
 
 // ---- 로그인 직후: 클라우드 ↔ 폰 데이터 맞추기 ----
@@ -2584,11 +2794,33 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     return;
   }
   if(currentUser){ closeAuth(); }   // 로그인되면 로그인 팝업 자동 닫기
+  // [요청] 마지막 로그인 후 1개월(30일)이 지나서 다시 로그인한 경우 "오랜만이에요" 토스트
+  if(event === "SIGNED_IN" && currentUser){
+    try{
+      const key = "lastLoginAt:" + currentUser.id;
+      const prev = localStorage.getItem(key);
+      if(prev){
+        const days = (Date.now() - parseInt(prev,10)) / 86400000;
+        if(days >= 30 && window.showToast) window.showToast("오랜만이에요! 다시 만나서 반가워요 👋");
+      }
+      localStorage.setItem(key, String(Date.now()));
+    }catch(e){}
+  }
   if(currentUser && syncedUserId !== currentUser.id){
     syncedUserId = currentUser.id;
     await syncOnLogin();
   }
   if(!currentUser) syncedUserId = null;
+  // [함께 정하기] 로그인 상태가 바뀌면 대기 중인 방 입장 요청을 이어서 처리
+  if(currentUser && window.__pendingRoomCode){
+    const code = window.__pendingRoomCode; window.__pendingRoomCode = null;
+    if(window.openRoomByCode) window.openRoomByCode(code);
+  }
+  // [함께 정하기] '?room=CODE' 링크로 들어온 경우, 로그인 상태가 처음 확정된 시점에 딱 한 번 자동 입장 시도
+  if(urlRoomCode && !urlRoomHandled){
+    urlRoomHandled = true;
+    if(window.openRoomByCode) window.openRoomByCode(urlRoomCode);
+  }
 });
 
 // ---- 버튼 동작 ----
@@ -2606,13 +2838,15 @@ $("profSave").onclick = async () => {
   $("profMsg").textContent = "변경 중…";
   const { error } = await supabase.auth.updateUser({ password: pw });
   $("profMsg").textContent = error ? ("변경 실패: " + error.message) : "비밀번호가 변경되었습니다.";
+  if(!error && window.showToast) window.showToast("비밀번호가 변경됐어요.");
 };
 
 // [프로필 탭] 내 데이터 백업하기 → 지금 즉시 클라우드에 저장
 $("pfBackup").onclick = async () => {
   if(!currentUser) return;
   syncEl.textContent = "백업 중…";
-  await cloudPush();
+  const ok = await cloudPush();
+  if(ok && window.showToast) window.showToast("클라우드에 백업했어요.");
 };
 
 // [5단계] 비밀번호 재설정 메일 보내기
@@ -2641,6 +2875,7 @@ pfLogoutBtn.onclick = async () => {
   await supabase.auth.signOut();
   if(syncEl) syncEl.textContent = "";
   if(window.renderProfileTab) window.renderProfileTab();
+  if(window.showToast) window.showToast("로그아웃했어요.");
 };
 
 // [프로필 탭] '회원탈퇴' 텍스트 버튼 → 확인 후 계정+클라우드 데이터 영구 삭제
@@ -2674,6 +2909,176 @@ window.sendFeedback = async function(type, text){
     if(error){ console.log("feedback insert 오류:", error); return { ok:false }; }
     return { ok:true };
   }catch(e){ return { ok:false }; }
+};
+
+/* ===== [함께 정하기] 여러 명이 같은 방에서 각자 먹고 싶은 메뉴를 적고,
+   방장이 '다같이 돌리기'를 누르면 그 중 하나가 슬롯처럼 랜덤 당첨되는 기능 =====
+   - 로그인 필요(방 생성·참여 모두)
+   - 참여자는 자유 입력으로 메뉴 하나씩 제출
+   - 방장이 '다같이 돌리기' → 제출된 메뉴 중 하나가 무작위 당첨, Realtime으로 모두에게 실시간 반영 */
+const ROOM_CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // 헷갈리는 0/O, 1/I/L 제외
+function genRoomCode(){
+  let s=""; for(let i=0;i<6;i++) s+=ROOM_CODE_CHARS[Math.floor(Math.random()*ROOM_CODE_CHARS.length)];
+  return s;
+}
+function roomDisplayName(){
+  const nn = (window.getNickname && window.getNickname()) || "";
+  if(nn.trim()) return nn.trim();
+  return currentUser && currentUser.email ? currentUser.email.split("@")[0] : "익명";
+}
+function roomShareUrl(code){ return window.location.origin + window.location.pathname + "?room=" + code; }
+function roomShareMessage(code){
+  return "🎰 [모먹지] 오늘 뭐 먹지 고민 그만! 내가 방 만들었어 — 먹고 싶은 메뉴 하나만 적어줘, 다같이 슬롯 돌려서 누구 메뉴 먹을지 정하자 👉 " + roomShareUrl(code);
+}
+
+let currentRoom = null;      // 현재 열려있는 방 (rooms 테이블 row)
+let roomEntries = [];        // 현재 방의 참여자 + 제출한 메뉴 목록
+let roomChannel = null;      // Realtime 구독 채널
+let roomRevealedFor = null;  // 이미 당첨 연출을 재생한 방 id (중복 재생 방지)
+
+function unsubscribeRoomChannel(){ if(roomChannel){ supabase.removeChannel(roomChannel); roomChannel=null; } }
+window.unsubscribeRoomChannel = unsubscribeRoomChannel;
+
+async function fetchRoomEntries(roomId){
+  const { data, error } = await supabase.from("room_entries").select("*").eq("room_id", roomId).order("created_at", { ascending:true });
+  if(error){ console.log("방 참여자 조회 오류:", error); return []; }
+  return data || [];
+}
+
+// 당첨 결과를 슬롯처럼 후보 이름들을 빠르게 보여주다 당첨 메뉴에서 멈추는 짧은 연출
+function playRoomReveal(winnerName){
+  const reel = $("roomReel");
+  const names = roomEntries.map(e=>e.menu_name).filter(Boolean);
+  if(names.length===0) names.push(winnerName);
+  let i=0, ticks=0; const totalTicks=14;
+  const timer=setInterval(()=>{
+    reel.textContent = names[i % names.length]; i++; ticks++;
+    if(ticks>=totalTicks){ clearInterval(timer); reel.textContent = winnerName; }
+  }, 90);
+}
+
+function renderRoomView(){
+  const room = currentRoom; if(!room) return;
+  $("roomCodeLabel").textContent = room.code;
+  const isHost = currentUser && room.host_user_id === currentUser.id;
+  const mine = currentUser ? roomEntries.find(e=>e.user_id===currentUser.id) : null;
+
+  const list = $("roomEntryList"); list.innerHTML = "";
+  if(roomEntries.length===0){
+    list.innerHTML = '<div class="room-entry-empty">아직 아무도 메뉴를 적지 않았어요.</div>';
+  } else {
+    roomEntries.forEach(e=>{
+      const isWinnerRow = room.status==="done" && e.menu_name===room.winner_name && e.nickname===room.winner_nickname;
+      const row=document.createElement("div"); row.className="room-entry-row"+(isWinnerRow?" is-winner":"");
+      const nm=document.createElement("span"); nm.className="re-name"; nm.textContent=(e.nickname||"익명")+(currentUser && e.user_id===currentUser.id?" (나)":"");
+      const mn=document.createElement("span"); mn.className="re-menu"+(e.menu_name?"":" pending"); mn.textContent=e.menu_name||"대기중";
+      row.appendChild(nm); row.appendChild(mn); list.appendChild(row);
+    });
+  }
+  $("roomEntryCount").textContent = String(roomEntries.length);
+  $("roomMenuInput").value = mine ? (mine.menu_name||"") : "";
+  $("roomEntryField").style.display = room.status==="done" ? "none" : "";
+
+  const canSpin = isHost && room.status==="open" && roomEntries.some(e=>e.menu_name);
+  $("roomHostActions").style.display = (isHost && room.status==="open") ? "flex" : "none";
+  $("roomSpinBtn").disabled = !canSpin;
+
+  if(room.status==="done") $("roomStatusLabel").textContent="당첨 결과가 나왔어요!";
+  else if(isHost) $("roomStatusLabel").textContent="각자 먹고 싶은 메뉴를 적으면, 내가 다같이 돌릴 수 있어요.";
+  else $("roomStatusLabel").textContent="각자 먹고 싶은 메뉴를 적고, 방장이 돌리길 기다려주세요.";
+
+  if(room.status==="done" && room.winner_name){
+    $("roomReveal").style.display="block";
+    $("roomWinnerText").textContent=(room.winner_nickname||"누군가")+"님이 제안한 메뉴예요!";
+    if(roomRevealedFor!==room.id){ roomRevealedFor=room.id; playRoomReveal(room.winner_name); }
+    else $("roomReel").textContent = room.winner_name;
+  } else {
+    $("roomReveal").style.display="none";
+  }
+}
+
+function subscribeRoom(roomId){
+  unsubscribeRoomChannel();
+  roomChannel = supabase.channel("room-"+roomId)
+    .on("postgres_changes", { event:"*", schema:"public", table:"room_entries", filter:"room_id=eq."+roomId }, async ()=>{
+      roomEntries = await fetchRoomEntries(roomId); renderRoomView();
+    })
+    .on("postgres_changes", { event:"UPDATE", schema:"public", table:"rooms", filter:"id=eq."+roomId }, (payload)=>{
+      currentRoom = payload.new; renderRoomView();
+    })
+    .subscribe();
+}
+
+// 방 코드로 입장 (방장이 만든 직후 자기 화면을 열 때 + 초대 링크로 들어온 사람이 참여할 때 공용으로 사용)
+window.openRoomByCode = async function(code){
+  code = (code||"").trim().toUpperCase();
+  if(!code) return;
+  if(!currentUser){
+    window.__pendingRoomCode = code;
+    window.requireLogin({ msg:"친구와 함께 정하려면 로그인이 필요해요. 로그인할까요?", title:"로그인이 필요해요" });
+    return;
+  }
+  const { data: room, error } = await supabase.from("rooms").select("*").eq("code", code).maybeSingle();
+  if(error || !room){ if(window.showToast) window.showToast("방을 찾을 수 없어요. 코드를 확인해주세요."); return; }
+  currentRoom = room; roomRevealedFor = null;
+  roomEntries = await fetchRoomEntries(room.id);
+  subscribeRoom(room.id);
+  renderRoomView();
+  $("roomOverlay").classList.add("open");
+  // 주소창의 ?room= 은 정리 (새로고침해도 재입장 팝업이 다시 뜨지 않도록)
+  try{ const u=new URL(window.location.href); u.searchParams.delete("room"); history.replaceState({}, "", u.toString()); }catch(e){}
+};
+
+// [공유] 방 만들고 카톡 등으로 초대 문구 공유
+window.createAndShareRoom = async function(){
+  if(!window.requireLogin({ msg:"친구와 함께 정하려면 로그인이 필요해요. 로그인할까요?", title:"로그인이 필요해요" })) return;
+  const code = genRoomCode();
+  const { data: room, error } = await supabase.from("rooms")
+    .insert({ code, host_user_id: currentUser.id, host_nickname: roomDisplayName() }).select().single();
+  if(error || !room){ if(window.showToast) window.showToast("방을 만들지 못했어요. 잠시 후 다시 시도해주세요."); console.log("방 생성 오류:", error); return; }
+  currentRoom = room; roomEntries = []; roomRevealedFor = null;
+  subscribeRoom(room.id);
+  renderRoomView();
+  $("roomOverlay").classList.add("open");
+  if(window.showToast) window.showToast("방을 만들었어요!");
+  await shareRoomLink(code);
+};
+
+// 초대 문구를 카톡 등으로 공유(지원 안 하면 문구+링크를 클립보드로 복사)
+async function shareRoomLink(code){
+  const text = roomShareMessage(code);
+  const shareData = { title:"모먹지 - 함께 정하기", text, url: roomShareUrl(code) };
+  if(navigator.share){
+    try{ await navigator.share(shareData); return; }catch(e){ /* 취소 등 → 복사로 대체 */ }
+  }
+  if(window.copyToClipboard) window.copyToClipboard(text, ()=>{ if(window.showToast) window.showToast("초대 문구가 복사됐어요! 카톡에 붙여넣기 해보세요."); });
+}
+window.shareCurrentRoom = function(){ if(currentRoom) shareRoomLink(currentRoom.code); };
+
+// 내가 먹고 싶은 메뉴 제출(또는 수정)
+window.submitRoomEntry = async function(){
+  if(!currentRoom || !currentUser) return;
+  const v = ($("roomMenuInput").value||"").trim();
+  if(!v){ $("roomMenuInput").focus(); return; }
+  const { error } = await supabase.from("room_entries")
+    .upsert({ room_id: currentRoom.id, user_id: currentUser.id, nickname: roomDisplayName(), menu_name: v }, { onConflict:"room_id,user_id" });
+  if(error){ console.log("메뉴 제출 오류:", error); if(window.showToast) window.showToast("메뉴 제출에 실패했어요."); return; }
+  roomEntries = await fetchRoomEntries(currentRoom.id);
+  renderRoomView();
+  if(window.showToast) window.showToast("메뉴를 제출했어요!");
+};
+
+// [방장] 다같이 돌리기 → 제출된 메뉴 중 하나를 무작위로 당첨시켜 방에 반영 (Realtime으로 모두에게 전파)
+window.spinRoom = async function(){
+  if(!currentRoom || !currentUser || currentRoom.host_user_id !== currentUser.id) return;
+  const candidates = roomEntries.filter(e=>e.menu_name);
+  if(candidates.length===0) return;
+  const winner = candidates[Math.floor(Math.random()*candidates.length)];
+  const { data: updated, error } = await supabase.from("rooms")
+    .update({ status:"done", winner_name: winner.menu_name, winner_nickname: winner.nickname })
+    .eq("id", currentRoom.id).select().single();
+  if(error){ console.log("방 스핀 오류:", error); if(window.showToast) window.showToast("돌리기에 실패했어요."); return; }
+  currentRoom = updated; renderRoomView(); // 본인 화면은 Realtime 왕복을 기다리지 않고 즉시 반영
 };
 </script>
 </body>
