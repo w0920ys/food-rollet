@@ -125,13 +125,11 @@
   /* 약관/개인정보 본문 (스크롤) */
   .doc-body { font-size: 13px; line-height: 1.7; color: var(--text-body); white-space: pre-wrap; max-height: 60vh; overflow-y: auto; margin-bottom: 14px; word-break: keep-all; }
 
-  /* ===== [Part A] 새 헤더: 로고(좌) · 그룹 드롭다운 · 메뉴 버튼(우) ===== */
+  /* ===== 헤더: 로고(좌) · 그룹 드롭다운(우) ===== */
   .app-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; position: relative; }
   .brand-logo { width: 34px; height: 34px; border-radius: 9px; overflow: hidden; flex-shrink: 0; display: inline-flex; }
   .brand-logo svg { width: 100%; height: 100%; display: block; }
   .header-spacer { flex: 1; }
-  .menu-btn { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 9px; color: var(--text-body); cursor: pointer; flex-shrink: 0; }
-  .menu-btn .material-symbols-rounded { font-size: 24px; }
 
   /* 그룹 선택 드롭다운 */
   .group-dd { position: relative; }
@@ -146,23 +144,6 @@
   .group-dd-manage { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 42px; margin-top: 4px; padding: 8px 10px; border: none; border-top: 1px solid var(--border-default); background: none; font-size: 13px; font-weight: 600; color: var(--text-secondary); cursor: pointer; }
   .group-dd-manage:hover { color: var(--text-body); }
   .group-dd-manage .material-symbols-rounded { font-size: 18px; }
-
-  /* ===== [Part A] LNB: 오른쪽에서 슬라이드되는 메뉴 서랍 ===== */
-  .lnb-overlay { position: fixed; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: rgba(0,0,0,0.4); opacity: 0; visibility: hidden; transition: opacity 0.2s; z-index: 200; }
-  .lnb-overlay.open { opacity: 1; visibility: visible; }
-  .lnb { position: absolute; top: 0; right: 0; bottom: 0; width: 82%; max-width: 320px; background: #fff; box-shadow: -4px 0 24px rgba(0,0,0,0.12); padding: 16px; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.22s cubic-bezier(0.2,0.6,0.25,1); }
-  .lnb-overlay.open .lnb { transform: translateX(0); }
-  .lnb-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .lnb-title { font-size: 16px; font-weight: 800; }
-  .lnb-close { width: 36px; height: 36px; border: none; background: none; border-radius: 8px; color: var(--text-secondary); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
-  .lnb-account { background: var(--surface-subtle); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
-  .lnb-acc-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.5; }
-  .lnb-acc-email { font-size: 14px; font-weight: 700; color: var(--text-body); margin-bottom: 4px; word-break: break-all; }
-  .lnb-acc-sync { font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; min-height: 14px; }
-  .lnb-menu { display: flex; flex-direction: column; gap: 2px; }
-  .lnb-item { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 10px 12px; border: none; background: none; border-radius: 10px; font-size: 15px; font-weight: 600; color: var(--text-body); cursor: pointer; text-align: left; }
-  .lnb-item:hover { background: var(--surface-subtle); }
-  .lnb-item .material-symbols-rounded { font-size: 22px; color: var(--text-secondary); }
 
   /* [PWA] 새 버전 업데이트 배너 (상단 고정) */
   .update-banner { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; z-index: 300; display: none; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--action-primary); color: var(--text-on-fill); box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
@@ -213,7 +194,7 @@
 
   /* ===== [공통] 아이콘 버튼 hover — 한 곳에서 관리 =====
      기본 hover(옅은 배경) / 삭제 hover(빨강). 색을 바꾸려면 여기만 수정하면 모든 아이콘 버튼에 반영됩니다. */
-  .menu-btn:hover, .lnb-close:hover, .icon-btn:hover, .res-act-btn:hover,
+  .icon-btn:hover, .res-act-btn:hover,
   .search-clear:hover, .act-btn:hover, .chip-act.edit:hover, .cal-nav:hover { background: var(--surface-subtle); color: var(--text-body); }
   .res-act-btn.del:hover, .act-btn.del:hover, .chip-act.del:hover, .today-del:hover { background: #fdecec; color: var(--text-danger); border-color: #f5c6c6; }
 
@@ -517,6 +498,61 @@
   .cat-add-menu .mini-add { display: inline-flex; align-items: center; justify-content: center; border: none; background: var(--action-primary); color: var(--text-on-fill); border-radius: 8px; width: 34px; cursor: pointer; flex-shrink: 0; }
   .cat-add-menu .mini-add .material-symbols-rounded { font-size: 18px; }
   .cat-row-msg { font-size: 11px; color: var(--text-danger); min-height: 14px; margin-top: 4px; }
+
+  /* ===== [프로필 탭] 계정·설정·지원 화면 ===== */
+  .pf-section { margin-bottom: 22px; }
+  .pf-h { font-size: 13px; font-weight: 800; color: var(--text-secondary); letter-spacing: -0.01em; margin: 0 4px 8px; }
+  .pf-card { background: var(--surface-card); border: 1px solid var(--border-default); border-radius: 16px; padding: 6px 4px; }
+  .pf-sub { font-size: 12px; font-weight: 800; color: var(--text-muted); padding: 10px 14px 4px; }
+  .pf-row { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 10px 14px; }
+  .pf-row + .pf-row { border-top: 1px solid var(--soft); }
+  .pf-label { font-size: 14px; font-weight: 700; color: var(--text-body); flex-shrink: 0; }
+  .pf-value { margin-left: auto; font-size: 14px; color: var(--text-secondary); text-align: right; word-break: break-all; }
+  .pf-inline-input { border: none; background: none; text-align: right; font-size: 14px; font-weight: 700; color: var(--text-body); width: 160px; padding: 6px 0; }
+  .pf-inline-input:focus { outline: none; border-bottom: 1.5px solid var(--border-strong); }
+  .pf-time-input { margin-left: auto; border: 1px solid var(--border-default); border-radius: 9px; padding: 7px 10px; font-size: 14px; font-weight: 700; color: var(--text-body); }
+  /* 클릭형 행(그룹관리/설치/도움/피드백/공유/업데이트) */
+  .pf-nav-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 12px 14px; border: none; background: none; cursor: pointer; text-align: left; font-size: 15px; font-weight: 700; color: var(--text-body); border-radius: 12px; }
+  .pf-nav-row + .pf-nav-row { border-top: 1px solid var(--soft); }
+  .pf-nav-row:hover { background: var(--surface-subtle); }
+  .pf-nav-row > .material-symbols-rounded:first-child { font-size: 22px; color: var(--text-secondary); }
+  .pf-nav-row > span:nth-child(2) { flex: 1; }
+  .pf-nav-row .pf-chev { font-size: 20px; color: var(--text-muted); margin-left: auto; }
+  .pf-nav-row .pf-ver { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-left: auto; }
+  .pf-nav-row.solo { border: 1px solid var(--border-default); }
+  .pf-sync { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-left: auto; }
+  .pf-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 50px; padding: 10px 14px; font-size: 14px; font-weight: 700; color: var(--text-body); cursor: pointer; user-select: none; }
+  .pf-div { border: none; border-top: 1px solid var(--border-default); margin: 8px 6px; }
+  .pf-msg { font-size: 12px; color: var(--text-secondary); min-height: 15px; padding: 0 14px 8px; }
+  .pf-msg.err { color: var(--text-danger); }
+  /* 요일 선택 칩 (월~일) */
+  .pf-dow-wrap { display: flex; gap: 6px; padding: 4px 14px 12px; }
+  .dow-chip { flex: 1; min-width: 0; height: 40px; border: 1.5px solid var(--border-default); border-radius: 10px; background: var(--surface-card); font-size: 13px; font-weight: 700; color: var(--text-secondary); cursor: pointer; }
+  .dow-chip.on { background: var(--state-selected); border-color: var(--border-strong); color: var(--text-on-fill); }
+  /* 하단 텍스트 버튼(약관/개인정보/로그아웃/회원탈퇴) */
+  .pf-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 14px; padding: 8px 0 4px; }
+  .pf-text-btn { background: none; border: none; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 4px; text-decoration: underline; }
+  .pf-text-btn:hover { color: var(--text-secondary); }
+  .pf-text-btn.danger { color: var(--text-danger); opacity: 0.8; }
+
+  /* [알러지] 그룹별·사람별 못 먹는 음식 */
+  .dislike-person { border: 1px solid var(--border-default); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+  .dislike-person-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .dislike-person-top .input { flex: 1; font-weight: 700; }
+  .dislike-person-top .p-del { width: 36px; height: 36px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border-default); background: #fff; border-radius: 9px; color: var(--text-muted); cursor: pointer; }
+  .dislike-person-top .p-del:hover { background: #fdecec; color: var(--text-danger); }
+  .dislike-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .dislike-chips:empty { display: none; }
+
+  /* [피드백] 유형 선택 */
+  .fb-types { display: flex; gap: 8px; }
+  .fb-type { flex: 1; padding: 12px 8px; border: 1.5px solid var(--border-default); border-radius: 11px; background: var(--surface-card); font-size: 13px; font-weight: 700; color: var(--text-secondary); cursor: pointer; }
+  .fb-type.active { border-color: var(--border-strong); background: var(--state-selected); color: var(--text-on-fill); }
+  textarea.input { font-family: inherit; line-height: 1.5; }
+
+  /* [공용] 토스트 */
+  .toast { position: fixed; left: 50%; bottom: 80px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 999px; font-size: 13px; font-weight: 700; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 400; max-width: 90%; text-align: center; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
@@ -553,8 +589,6 @@
     </div>
 
     <span class="header-spacer"></span>
-    <!-- 메뉴 버튼 → LNB 열기 -->
-    <button class="menu-btn" id="menuBtn" title="메뉴"><span class="material-symbols-rounded">menu</span></button>
   </header>
 
   <div class="tab-page active" id="page-slot">
@@ -655,12 +689,115 @@
       </div>
     </div>
   </div>
+
+  <!-- ===== [프로필 탭] 계정 · 그룹관리 · 설정 · 지원 · 공유 ===== -->
+  <div class="tab-page" id="page-profile">
+    <!-- 내 프로필 -->
+    <section class="pf-section">
+      <h2 class="pf-h">내 프로필</h2>
+      <div class="pf-card">
+        <div class="pf-row">
+          <span class="pf-label">닉네임</span>
+          <input type="text" id="pfNick" class="pf-inline-input" maxlength="16" placeholder="닉네임">
+        </div>
+        <div class="pf-row">
+          <span class="pf-label">아이디</span>
+          <span class="pf-value" id="pfId">로그인 필요</span>
+        </div>
+        <div class="pf-row">
+          <span class="pf-label">이메일주소</span>
+          <span class="pf-value" id="pfEmail">로그인 필요</span>
+        </div>
+        <div class="pf-row" id="pfBackupRow" style="display:none;padding:0;">
+          <button class="pf-nav-row" id="pfBackup" style="min-height:50px;">
+            <span class="material-symbols-rounded">cloud_upload</span><span>내 데이터 백업하기</span>
+            <span class="pf-sync" id="pfSync"></span>
+          </button>
+        </div>
+      </div>
+      <div style="padding:10px 4px 0;">
+        <button class="btn btn-primary" id="pfLoginBtn" style="width:100%;justify-content:center;">로그인 / 회원가입</button>
+      </div>
+    </section>
+
+    <!-- 그룹관리 -->
+    <section class="pf-section">
+      <div class="pf-card" style="padding:0;">
+        <button class="pf-nav-row" id="pfGroups">
+          <span class="material-symbols-rounded">groups</span><span>그룹관리</span>
+          <span class="material-symbols-rounded pf-chev">chevron_right</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 설정 -->
+    <section class="pf-section">
+      <h2 class="pf-h">설정</h2>
+      <div class="pf-card">
+        <div class="pf-sub">푸시알림</div>
+        <label class="pf-switch-row">
+          <span>알림 받기</span>
+          <span class="switch"><input type="checkbox" id="pfNotifyEnabled"><span class="slider"></span></span>
+        </label>
+        <div class="pf-row" style="border-top:1px solid var(--soft);">
+          <span class="pf-label">알림 시간</span>
+          <input type="time" id="pfNotifyTime" class="pf-time-input" value="18:30">
+        </div>
+        <div class="pf-sub" style="padding-top:8px;">알림 요일</div>
+        <div class="pf-dow-wrap" id="pfDow"></div>
+        <div class="pf-msg" id="pfNotifyMsg"></div>
+        <hr class="pf-div">
+        <button class="pf-nav-row" id="pfUpdate">
+          <span class="material-symbols-rounded">system_update</span><span>버전 최신 업데이트</span>
+          <span class="pf-ver" id="pfVer"></span>
+        </button>
+        <button class="pf-nav-row" id="pfInstall" style="display:none;">
+          <span class="material-symbols-rounded">install_mobile</span><span>홈화면 설치</span>
+          <span class="material-symbols-rounded pf-chev">chevron_right</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 지원 -->
+    <section class="pf-section">
+      <h2 class="pf-h">지원</h2>
+      <div class="pf-card">
+        <button class="pf-nav-row" id="pfHelp">
+          <span class="material-symbols-rounded">help</span><span>도움이 필요하신가요?</span>
+          <span class="material-symbols-rounded pf-chev">chevron_right</span>
+        </button>
+        <button class="pf-nav-row" id="pfFeedback">
+          <span class="material-symbols-rounded">rate_review</span><span>피드백 남기기</span>
+          <span class="material-symbols-rounded pf-chev">chevron_right</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 공유 -->
+    <section class="pf-section">
+      <div class="pf-card" style="padding:0;">
+        <button class="pf-nav-row" id="pfShare">
+          <span class="material-symbols-rounded">share</span><span>친구에게 공유하기</span>
+          <span class="material-symbols-rounded pf-chev">chevron_right</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 하단 텍스트 버튼 -->
+    <div class="pf-foot">
+      <button class="pf-text-btn" id="pfTerms">이용약관</button>
+      <button class="pf-text-btn" id="pfPrivacy">개인정보처리방침</button>
+      <button class="pf-text-btn" id="pfLogout" style="display:none;">로그아웃</button>
+      <button class="pf-text-btn danger" id="pfWithdraw" style="display:none;">회원탈퇴</button>
+    </div>
+  </div>
 </div>
 
 <nav class="bottom-nav">
   <button class="nav-btn active" data-tab="slot"><span class="material-symbols-rounded">casino</span>슬롯</button>
-  <button class="nav-btn" data-tab="manage"><span class="material-symbols-rounded">restaurant_menu</span>관리</button>
-  <button class="nav-btn" data-tab="history"><span class="material-symbols-rounded">calendar_month</span>히스토리</button>
+  <button class="nav-btn" data-tab="manage"><span class="material-symbols-rounded">restaurant_menu</span>메뉴</button>
+  <button class="nav-btn" data-tab="history"><span class="material-symbols-rounded">insights</span>분석</button>
+  <button class="nav-btn" data-tab="profile"><span class="material-symbols-rounded">person</span>프로필</button>
 </nav>
 
 <div class="overlay" id="overlay">
@@ -717,38 +854,7 @@
   </div>
 </div>
 
-<!-- [Part A] LNB: 오른쪽 슬라이드 메뉴 서랍 -->
-<div class="lnb-overlay" id="lnbOverlay">
-  <aside class="lnb" id="lnb">
-    <div class="lnb-head">
-      <span class="lnb-title">메뉴</span>
-      <button class="lnb-close" id="lnbClose"><span class="material-symbols-rounded">close</span></button>
-    </div>
-    <!-- 계정 영역 (로그인 상태에 따라 Supabase 모듈이 갱신) -->
-    <div class="lnb-account">
-      <div id="lnbAccOut">
-        <p class="lnb-acc-desc">로그인하면 저장한 메뉴가 클라우드에 백업되고, 다른 기기에서도 똑같이 보여요.</p>
-        <button class="btn btn-primary" id="lnbLoginBtn" style="width:100%;justify-content:center;">로그인 / 회원가입</button>
-      </div>
-      <div id="lnbAccIn" style="display:none;">
-        <p class="lnb-acc-email" id="lnbAccEmail"></p>
-        <p class="lnb-acc-sync" id="lnbSync"></p>
-        <button class="btn btn-soft" id="lnbLogoutBtn" style="width:100%;justify-content:center;">로그아웃</button>
-      </div>
-    </div>
-    <nav class="lnb-menu">
-      <button class="lnb-item" id="lnbProfile"><span class="material-symbols-rounded">manage_accounts</span>회원 정보 관리</button>
-      <button class="lnb-item" id="lnbNotify"><span class="material-symbols-rounded">notifications</span>알림 설정</button>
-      <button class="lnb-item" id="lnbAppInfo"><span class="material-symbols-rounded">info</span>앱 정보 / 버전</button>
-      <button class="lnb-item" id="lnbInstall" style="display:none;"><span class="material-symbols-rounded">install_mobile</span>홈 화면에 설치</button>
-      <button class="lnb-item" id="lnbContact"><span class="material-symbols-rounded">mail</span>문의하기</button>
-      <button class="lnb-item" id="lnbTerms"><span class="material-symbols-rounded">description</span>이용약관</button>
-      <button class="lnb-item" id="lnbPrivacy"><span class="material-symbols-rounded">privacy_tip</span>개인정보처리방침</button>
-    </nav>
-  </aside>
-</div>
-
-<!-- [Part A] 회원 정보 관리 팝업 -->
+<!-- [Part A] 회원 정보 관리 팝업 (비밀번호 재설정 링크 접속 시 새 비번 입력용) -->
 <div class="overlay" id="profileOverlay">
   <div class="dialog">
     <h3>회원 정보 관리</h3>
@@ -765,44 +871,47 @@
   </div>
 </div>
 
+<!-- [공용] 짧은 안내 토스트 -->
+<div class="toast" id="toast"></div>
+
 <!-- [PWA] 새 버전 업데이트 배너 -->
 <div class="update-banner" id="updateBanner">
   <span>새 버전이 나왔어요</span>
   <button class="btn btn-soft btn-xs" id="updateReloadBtn"><span class="material-symbols-rounded">refresh</span>새로고침</button>
 </div>
 
-<!-- [6단계] 알림 설정 팝업 -->
-<div class="overlay" id="notifyOverlay">
+<!-- [알러지] 그룹별 · 사람별 못 먹는 음식 관리 팝업 -->
+<div class="overlay" id="dislikeOverlay">
   <div class="dialog">
-    <h3>알림 설정</h3>
-    <p class="auth-line">매일 정한 시간에 <b>"오늘 먹을 메뉴 정했어?"</b> 알림을 보내드려요.</p>
-    <label class="switch-row" style="margin-bottom:14px;">
-      <span>퇴근 메뉴 알림 받기</span>
-      <span class="switch"><input type="checkbox" id="notifyEnabled"><span class="slider"></span></span>
-    </label>
-    <div class="field">
-      <label for="notifyTime">알림 시간</label>
-      <input type="time" id="notifyTime" class="input" value="18:30">
-    </div>
-    <div class="dialog-msg" id="notifyMsg"></div>
+    <h3>못 먹는 음식 / 알러지</h3>
+    <p class="auth-line"><b id="dislikeGroupName">기본</b> 그룹에서 <b>누가 무엇을 못 먹는지</b> 등록해요.<br>등록한 단어가 이름에 들어간 메뉴는 이 그룹의 슬롯에서 자동 제외됩니다.</p>
+    <div id="dislikePeople"></div>
+    <button class="add-cat-btn" id="addPersonBtn"><span class="material-symbols-rounded">person_add</span>사람 추가</button>
     <div class="dialog-actions">
-      <button class="btn btn-primary" id="notifyClose" style="flex:1;justify-content:center;">완료</button>
+      <button class="btn btn-primary" id="dislikeClose" style="flex:1;justify-content:center;">완료</button>
     </div>
   </div>
 </div>
 
-<!-- [4단계] 못 먹는 음식 / 알러지 관리 팝업 -->
-<div class="overlay" id="dislikeOverlay">
+<!-- [지원] 피드백 남기기 팝업 -->
+<div class="overlay" id="feedbackOverlay">
   <div class="dialog">
-    <h3>못 먹는 음식 / 알러지</h3>
-    <p class="auth-line">여기에 등록한 단어가 <b>이름에 들어간 메뉴는 슬롯에서 자동 제외</b>돼요. (예: 새우, 땅콩, 오이)</p>
-    <div class="cat-add-menu" style="margin-bottom:12px;">
-      <input type="text" id="dislikeInput" class="input" maxlength="12" placeholder="예: 새우">
-      <button class="mini-add" id="dislikeAdd" title="추가"><span class="material-symbols-rounded">add</span></button>
+    <h3>피드백 남기기</h3>
+    <div class="field">
+      <label>어떤 이야기인가요?</label>
+      <div class="fb-types">
+        <button type="button" class="fb-type active" data-fb="feature">새로운 기능이<br>필요해요</button>
+        <button type="button" class="fb-type" data-fb="bug">버그를<br>발견했어요</button>
+      </div>
     </div>
-    <div class="chip-wrap" id="dislikeList" style="margin-bottom:14px;"></div>
+    <div class="field">
+      <label for="feedbackText">자세한 내용</label>
+      <textarea id="feedbackText" class="input" rows="5" maxlength="1000" placeholder="어떤 점이 불편했는지, 어떤 기능이 필요한지 편하게 적어주세요."></textarea>
+    </div>
+    <div class="dialog-msg" id="feedbackMsg"></div>
     <div class="dialog-actions">
-      <button class="btn btn-primary" id="dislikeClose" style="flex:1;justify-content:center;">완료</button>
+      <button class="btn btn-soft" id="feedbackClose">닫기</button>
+      <button class="btn btn-primary" id="feedbackSend">보내기</button>
     </div>
   </div>
 </div>
@@ -829,10 +938,10 @@
   </div>
 </div>
 
-<!-- 문의하기: 이메일 복사 팝업 -->
+<!-- 도움이 필요하신가요: 이메일 복사 팝업 -->
 <div class="overlay" id="contactOverlay">
   <div class="dialog">
-    <h3>문의하기</h3>
+    <h3>도움이 필요하신가요?</h3>
     <p class="auth-line">문의는 아래 이메일로 보내주세요.</p>
     <div class="field">
       <input type="text" id="contactEmail" class="input" value="w0920ys@gmail.com" readonly style="text-align:center;">
@@ -841,18 +950,6 @@
     <div class="dialog-actions">
       <button class="btn btn-soft" id="contactClose">닫기</button>
       <button class="btn btn-primary" id="contactCopy"><span class="material-symbols-rounded">content_copy</span>이메일 복사</button>
-    </div>
-  </div>
-</div>
-
-<!-- [Part A] 앱 정보 팝업 -->
-<div class="overlay" id="appInfoOverlay">
-  <div class="dialog">
-    <h3>앱 정보</h3>
-    <p class="auth-line"><b>모먹지</b> · 버전 <span id="appVer"></span></p>
-    <p class="auth-line">오늘 뭐 먹지? 고민을 슬롯으로 해결하는 메뉴 추첨 앱.</p>
-    <div class="dialog-actions">
-      <button class="btn btn-primary" id="appInfoClose" style="flex:1;justify-content:center;">닫기</button>
     </div>
   </div>
 </div>
@@ -889,11 +986,9 @@
         <button class="btn btn-soft" id="authSignupBtn">회원가입</button>
         <button class="btn btn-primary" id="authLoginBtn">로그인</button>
       </div>
-      <div class="dialog-actions" style="margin-top:8px;">
-        <button class="btn btn-soft" id="authCloseBtn" style="flex:1;justify-content:center;">닫기</button>
-      </div>
-      <div style="text-align:center; margin-top:12px;">
+      <div style="display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px;">
         <button class="text-link" id="authResetBtn">비밀번호를 잊으셨나요?</button>
+        <button class="text-link" id="authCloseBtn">닫기</button>
       </div>
     </div>
     <!-- (나) 로그인 된 상태 -->
@@ -980,23 +1075,24 @@ const DEFAULT_MENUS = [
 ].map(m => ({ ...m, selected: true }));
 
 let menus = [], excluded = new Set();
-let dislikes = [];              // [4단계] 못 먹는 음식/알러지 키워드 (이름에 포함되면 슬롯 후보에서 제외)
 let favorites = new Set();      // [4단계] 즐겨찾기 메뉴 이름 (슬롯에서 뽑힐 확률 2배 + 별표)
-let notify = { enabled:false, time:"18:30" };  // [6단계] 퇴근 알림 설정 (클라우드 동기화)
-// 유저 그룹 (당첨 기록/후보만 그룹별 분리, 메뉴·카테고리는 공용)
+let notify = { enabled:false, time:"18:30", days:[0,1,2,3,4,5,6] };  // [6단계] 퇴근 알림 설정: days는 요일(0=일~6=토) (클라우드 동기화)
+let nickname = "";              // [프로필] 닉네임
+// 유저 그룹 (당첨 기록/후보/못 먹는 음식은 그룹별 분리, 메뉴·카테고리는 공용)
 let groups = [
-  { id:"default", name:"기본" },
-  { id:"bf", name:"남자친구" },
-  { id:"family", name:"친척 가족" }
+  { id:"default", name:"나 혼자 먹을 때" },
+  { id:"family", name:"가족들과 함께 먹을 때" }
 ];
 let activeGroup = "default";
 let picksAll = {};   // groupId -> { dateKey: [ {name,categories,ts} ] }
 let finalsAll = {};  // groupId -> { dateKey: {name,categories,ts} }
 let orderAll = {};   // groupId -> { dateKey: [메뉴명 순서] }
+let dislikesAll = {};  // groupId -> [ {id, name, items:[키워드,...]} ]  (그룹마다 '누가 무엇을 못 먹는지')
 // 활성 그룹의 뷰 (전환 시 스왑)
 let picks = {};
 let finals = {};
 let todayOrderMap = {};
+let dislikes = [];   // 활성 그룹의 사람별 못 먹는 음식 목록
 let spinning = false, editingIndex = -1, dlgCats = new Set();
 let currentWinner = null, spinCounter = 0;
 let calYear, calMonth, selectedDate = null;
@@ -1063,6 +1159,7 @@ function commitActiveGroup(){
   picksAll[activeGroup]=picks;
   finalsAll[activeGroup]=finals;
   orderAll[activeGroup]=todayOrderMap;
+  dislikesAll[activeGroup]=dislikes;
 }
 function save(){
   commitActiveGroup();
@@ -1077,7 +1174,9 @@ function loadActiveGroupView(){
   picks = picksAll[activeGroup] || (picksAll[activeGroup]={});
   finals = finalsAll[activeGroup] || (finalsAll[activeGroup]={});
   todayOrderMap = orderAll[activeGroup] || (orderAll[activeGroup]={});
+  dislikes = dislikesAll[activeGroup] || (dislikesAll[activeGroup]=[]);
 }
+function uid(){ return "p"+Date.now()+Math.random().toString(36).slice(2,6); }
 function load(){
   try{
     const raw=localStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY_OLD);
@@ -1099,9 +1198,14 @@ function load(){
       }
       if(Object.keys(finalsAll).length===0 && data.finals && typeof data.finals==="object") finalsAll["default"]=data.finals;
       if(Object.keys(orderAll).length===0 && data.todayOrderMap && typeof data.todayOrderMap==="object") orderAll["default"]=data.todayOrderMap;
-      if(Array.isArray(data.dislikes)) dislikes=data.dislikes;            // [4단계]
+      if(data.dislikesAll && typeof data.dislikesAll==="object") dislikesAll=data.dislikesAll;
+      // 구버전(그룹 구분 없는 평면 dislikes 배열) → '기본' 그룹의 '나' 항목으로 이관
+      if(Object.keys(dislikesAll).length===0 && Array.isArray(data.dislikes) && data.dislikes.length){
+        dislikesAll["default"]=[{ id:uid(), name:"나", items:data.dislikes }];
+      }
       if(Array.isArray(data.favorites)) favorites=new Set(data.favorites);
-    if(data.notify && typeof data.notify==="object") notify={ enabled:!!data.notify.enabled, time:data.notify.time||"18:30" }; // [4단계]
+      if(typeof data.nickname==="string") nickname=data.nickname;
+      if(data.notify && typeof data.notify==="object") notify={ enabled:!!data.notify.enabled, time:data.notify.time||"18:30", days:Array.isArray(data.notify.days)?data.notify.days:[0,1,2,3,4,5,6] };
       // 활성 그룹이 목록에 없으면 첫 그룹으로
       if(!groups.some(g=>g.id===activeGroup)) activeGroup=groups[0].id;
       loadActiveGroupView();
@@ -1116,7 +1220,7 @@ function load(){
 // 현재 앱 데이터를 통째로 하나의 객체로 꺼냄 (클라우드에 올릴 때 사용)
 function getStateBlob(){
   commitActiveGroup();
-  return { categories, menus, groups, activeGroup, picksAll, finalsAll, orderAll, dislikes, favorites:[...favorites], notify };
+  return { categories, menus, groups, activeGroup, picksAll, finalsAll, orderAll, dislikesAll, favorites:[...favorites], notify, nickname };
 }
 // 클라우드에서 받은 데이터를 앱에 반영 (다른 기기에서 저장한 걸 불러올 때 사용)
 function applyStateBlob(data){
@@ -1129,14 +1233,15 @@ function applyStateBlob(data){
     if(data.picksAll && typeof data.picksAll==="object") picksAll=data.picksAll;
     if(data.finalsAll && typeof data.finalsAll==="object") finalsAll=data.finalsAll;
     if(data.orderAll && typeof data.orderAll==="object") orderAll=data.orderAll;
-    if(Array.isArray(data.dislikes)) dislikes=data.dislikes;
+    if(data.dislikesAll && typeof data.dislikesAll==="object") dislikesAll=data.dislikesAll;
     if(Array.isArray(data.favorites)) favorites=new Set(data.favorites);
-    if(data.notify && typeof data.notify==="object") notify={ enabled:!!data.notify.enabled, time:data.notify.time||"18:30" };
+    if(typeof data.nickname==="string") nickname=data.nickname;
+    if(data.notify && typeof data.notify==="object") notify={ enabled:!!data.notify.enabled, time:data.notify.time||"18:30", days:Array.isArray(data.notify.days)?data.notify.days:[0,1,2,3,4,5,6] };
     if(!groups.some(g=>g.id===activeGroup)) activeGroup=groups[0].id;
     loadActiveGroupView();
     // 폰(localStorage)에도 똑같이 저장 (클라우드 훅은 다시 안 부르게 직접 저장)
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(getStateBlob())); }catch(e){}
-    renderAll();
+    renderAll(); renderProfileTab();
   }catch(e){ console.log("applyStateBlob 오류:", e); }
 }
 
@@ -1148,8 +1253,9 @@ function switchGroup(gid){
   loadActiveGroupView();         // 새 그룹 뷰 로드
   selectedDate=dateKey(Date.now());
   save();
-  renderGroupBar(); renderTodayList();
+  renderGroupBar(); renderTodayList(); renderIdleReel(); renderPoolInfo();
   if($("page-history").classList.contains("active")) renderHistory();
+  if($("dislikeOverlay").classList.contains("open")) renderDislikePeople();
 }
 
 const $ = id => document.getElementById(id);
@@ -1170,14 +1276,18 @@ const reelEl=$("reel"), resultEl=$("result"), spinBtn=$("spinBtn"), confirmBtn=$
   copyDlgClose=$("copyDlgClose"), copyDlgCopy=$("copyDlgCopy"),
   todayList=$("todayList"), todayCount=$("todayCount"), openTodayCopy=$("openTodayCopy"),
   groupDd=$("groupDd"), groupDdBtn=$("groupDdBtn"), groupDdLabel=$("groupDdLabel"), groupDdPanel=$("groupDdPanel"), groupDdList=$("groupDdList"), groupManageBtn=$("groupManageBtn"),
-  menuBtn=$("menuBtn"), lnbOverlay=$("lnbOverlay"),
   groupOverlay=$("groupOverlay"), groupManageList=$("groupManageList"), addGroupBtn=$("addGroupBtn"), groupMsg=$("groupMsg"), groupClose=$("groupClose");
 
+// 활성 그룹의 모든 사람이 못 먹는 키워드를 하나로 합침
+function dislikeKeywords(){
+  return dislikes.flatMap(p=>p.items||[]).filter(Boolean);
+}
 function poolMenus(){
   let l=menus.filter(m=>m.selected);
   if(excludeChk.checked) l=l.filter(m=>!excluded.has(m.name));
-  // [4단계] 못 먹는 음식/알러지 키워드가 이름에 포함된 메뉴는 후보에서 제외
-  if(dislikes.length) l=l.filter(m=>!dislikes.some(k=>k && m.name.includes(k)));
+  // 이 그룹의 누군가 못 먹는 키워드가 이름에 포함된 메뉴는 후보에서 제외
+  const dk=dislikeKeywords();
+  if(dk.length) l=l.filter(m=>!dk.some(k=>k && m.name.includes(k)));
   return l;
 }
 // [4단계] 즐겨찾기는 뽑힐 확률 2배 (릴/개수는 그대로, 당첨 index만 가중 선택)
@@ -1901,6 +2011,7 @@ function switchTab(tab){
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
   // (헤더의 그룹 드롭다운 표시 여부는 로그인 상태에 따라 renderAuthView가 관리)
   if(tab==="history") renderHistory();
+  if(tab==="profile") renderProfileTab();
 }
 function switchSubTab(sub){
   document.querySelectorAll(".sub-tab").forEach(b=>b.classList.toggle("active", b.dataset.sub===sub));
@@ -1945,7 +2056,7 @@ function renderGroupManage(){
 function addGroup(){
   let base="새 그룹", name=base, n=1; while(groups.some(g=>g.name===name)){ n++; name=base+n; }
   const id="g"+Date.now();
-  groups.push({id, name}); picksAll[id]={}; finalsAll[id]={}; orderAll[id]={};
+  groups.push({id, name}); picksAll[id]={}; finalsAll[id]={}; orderAll[id]={}; dislikesAll[id]=[];
   save(); renderGroupManage(); renderGroupBar();
 }
 function renameGroup(id, newName){
@@ -1958,9 +2069,9 @@ function deleteGroup(id){
   if(groups.length<=1) return;
   if(!confirm("이 그룹의 당첨 기록이 모두 삭제됩니다. 계속할까요?")) return;
   groups=groups.filter(g=>g.id!==id);
-  delete picksAll[id]; delete finalsAll[id]; delete orderAll[id];
+  delete picksAll[id]; delete finalsAll[id]; delete orderAll[id]; delete dislikesAll[id];
   if(activeGroup===id){ activeGroup=groups[0].id; loadActiveGroupView(); selectedDate=dateKey(Date.now()); }
-  save(); renderGroupManage(); renderGroupBar(); renderTodayList();
+  save(); renderGroupManage(); renderGroupBar(); renderTodayList(); renderIdleReel(); renderPoolInfo();
   if($("page-history").classList.contains("active")) renderHistory();
 }
 
@@ -2001,20 +2112,8 @@ groupOverlay.addEventListener("click",e=>{ if(e.target===groupOverlay) closeGrou
 groupDdBtn.onclick=(e)=>{ e.stopPropagation(); groupDdPanel.classList.toggle("open"); };
 document.addEventListener("click",(e)=>{ if(groupDdPanel.classList.contains("open") && !groupDd.contains(e.target)) groupDdPanel.classList.remove("open"); });
 
-// [Part A] LNB(오른쪽 메뉴 서랍) 열고 닫기 — closeLnb는 Supabase 모듈에서도 씀
-function openLnb(){ lnbOverlay.classList.add("open"); }
-function closeLnb(){ lnbOverlay.classList.remove("open"); }
-window.closeLnb = closeLnb;
-menuBtn.onclick=openLnb;
-$("lnbClose").onclick=closeLnb;
-lnbOverlay.addEventListener("click",(e)=>{ if(e.target===lnbOverlay) closeLnb(); });
-
-// [Part A] 앱 정보 팝업
-const APP_VERSION="1.4";
-$("appVer").textContent=APP_VERSION;
-$("lnbAppInfo").onclick=()=>{ closeLnb(); $("appInfoOverlay").classList.add("open"); };
-$("appInfoClose").onclick=()=>$("appInfoOverlay").classList.remove("open");
-$("appInfoOverlay").addEventListener("click",(e)=>{ if(e.target.id==="appInfoOverlay") $("appInfoOverlay").classList.remove("open"); });
+const APP_VERSION="1.5";
+$("pfVer").textContent="v"+APP_VERSION;
 
 // [공용] 텍스트를 클립보드에 복사 (성공 시 onOk 콜백)
 function copyToClipboard(text, onOk){
@@ -2030,9 +2129,9 @@ function copyToClipboard(text, onOk){
   } else fallback();
 }
 
-// [Part A] 문의하기 → 이메일 복사 팝업
+// [지원] 도움이 필요하신가요 → 이메일 복사 팝업
 const CONTACT_EMAIL="w0920ys@gmail.com";
-$("lnbContact").onclick=()=>{ closeLnb(); $("contactMsg").textContent=""; $("contactOverlay").classList.add("open"); };
+$("pfHelp").onclick=()=>{ $("contactMsg").textContent=""; $("contactOverlay").classList.add("open"); };
 $("contactClose").onclick=()=>$("contactOverlay").classList.remove("open");
 $("contactOverlay").addEventListener("click",(e)=>{ if(e.target.id==="contactOverlay") $("contactOverlay").classList.remove("open"); });
 $("contactCopy").onclick=()=>{
@@ -2102,70 +2201,120 @@ const PRIVACY_TEXT = `[개인정보처리방침]  (초안)
 시행일: 2026-08-28`;
 
 function openDoc(title, body){ $("docTitle").textContent=title; $("docBody").textContent=body; $("docBody").scrollTop=0; $("docOverlay").classList.add("open"); }
-$("lnbTerms").onclick=()=>{ closeLnb(); openDoc("이용약관", TERMS_TEXT); };
-$("lnbPrivacy").onclick=()=>{ closeLnb(); openDoc("개인정보처리방침", PRIVACY_TEXT); };
+$("pfTerms").onclick=()=>openDoc("이용약관", TERMS_TEXT);
+$("pfPrivacy").onclick=()=>openDoc("개인정보처리방침", PRIVACY_TEXT);
 $("docClose").onclick=()=>$("docOverlay").classList.remove("open");
 $("docOverlay").addEventListener("click",(e)=>{ if(e.target.id==="docOverlay") $("docOverlay").classList.remove("open"); });
 
-// [4단계] 못 먹는 음식 / 알러지 관리
-function renderDislikeList(){
-  const box=$("dislikeList"); box.innerHTML="";
-  if(dislikes.length===0){ box.innerHTML='<div class="empty-msg" style="padding:6px 2px;">등록된 항목이 없어요.</div>'; return; }
-  dislikes.forEach((k,idx)=>{
-    const chip=document.createElement("span"); chip.className="excl-chip";
-    chip.appendChild(document.createTextNode(k));
-    const x=document.createElement("button"); x.className="x"; x.title="삭제"; x.innerHTML='<span class="material-symbols-rounded">close</span>';
-    x.onclick=()=>{ dislikes.splice(idx,1); save(); renderDislikeList(); renderIdleReel(); renderPoolInfo(); };
-    chip.appendChild(x); box.appendChild(chip);
+// [알러지] 그룹별 · 사람별 못 먹는 음식 관리
+function renderDislikePeople(){
+  const cur = groups.find(g=>g.id===activeGroup) || groups[0];
+  $("dislikeGroupName").textContent = cur ? cur.name : "그룹";
+  const box=$("dislikePeople"); box.innerHTML="";
+  if(dislikes.length===0){ box.innerHTML='<div class="empty-msg" style="padding:6px 2px;">아직 등록된 사람이 없어요. 아래에서 추가해보세요.</div>'; return; }
+  dislikes.forEach((person,pi)=>{
+    const row=document.createElement("div"); row.className="dislike-person";
+    const top=document.createElement("div"); top.className="dislike-person-top";
+    const nameIn=document.createElement("input"); nameIn.type="text"; nameIn.className="input"; nameIn.maxLength=10;
+    nameIn.placeholder="이름 (예: 나, 엄마)"; nameIn.value=person.name||"";
+    nameIn.onchange=()=>{ person.name=nameIn.value.trim(); save(); };
+    top.appendChild(nameIn);
+    const del=document.createElement("button"); del.className="p-del"; del.title="이 사람 삭제";
+    del.innerHTML='<span class="material-symbols-rounded">delete</span>';
+    del.onclick=()=>{ dislikes.splice(pi,1); save(); renderDislikePeople(); renderIdleReel(); renderPoolInfo(); };
+    top.appendChild(del);
+    row.appendChild(top);
+
+    const chips=document.createElement("div"); chips.className="dislike-chips";
+    (person.items||[]).forEach((k,ki)=>{
+      const chip=document.createElement("span"); chip.className="excl-chip";
+      chip.appendChild(document.createTextNode(k));
+      const x=document.createElement("button"); x.className="x"; x.title="삭제"; x.innerHTML='<span class="material-symbols-rounded">close</span>';
+      x.onclick=()=>{ person.items.splice(ki,1); save(); renderDislikePeople(); renderIdleReel(); renderPoolInfo(); };
+      chip.appendChild(x); chips.appendChild(chip);
+    });
+    row.appendChild(chips);
+
+    const addWrap=document.createElement("div"); addWrap.className="cat-add-menu";
+    const addIn=document.createElement("input"); addIn.type="text"; addIn.className="input"; addIn.maxLength=12; addIn.placeholder="못 먹는 음식 (예: 새우)";
+    const addBtn=document.createElement("button"); addBtn.className="mini-add"; addBtn.title="추가";
+    addBtn.innerHTML='<span class="material-symbols-rounded">add</span>';
+    const doAdd=()=>{
+      const v=addIn.value.trim(); if(!v) return;
+      person.items=person.items||[];
+      if(!person.items.includes(v)) person.items.push(v);
+      addIn.value=""; save(); renderDislikePeople(); renderIdleReel(); renderPoolInfo();
+    };
+    addBtn.onclick=doAdd;
+    addIn.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); doAdd(); } });
+    addWrap.appendChild(addIn); addWrap.appendChild(addBtn);
+    row.appendChild(addWrap);
+    box.appendChild(row);
   });
 }
-function addDislike(){
-  const v=$("dislikeInput").value.trim();
-  if(!v){ $("dislikeInput").focus(); return; }
-  if(!dislikes.includes(v)) dislikes.push(v);
-  $("dislikeInput").value=""; $("dislikeInput").focus();
-  save(); renderDislikeList(); renderIdleReel(); renderPoolInfo();
+$("addPersonBtn").onclick=()=>{
+  dislikes.push({ id:uid(), name:"", items:[] });
+  save(); renderDislikePeople();
+  const inputs=document.querySelectorAll("#dislikePeople .dislike-person-top .input");
+  const last=inputs[inputs.length-1]; if(last) last.focus();
+};
+$("openDislikes").onclick=()=>{ renderDislikePeople(); $("dislikeOverlay").classList.add("open"); };
+$("dislikeClose").onclick=()=>{ $("dislikeOverlay").classList.remove("open"); renderAll(); };
+$("dislikeOverlay").addEventListener("click",(e)=>{ if(e.target.id==="dislikeOverlay"){ $("dislikeOverlay").classList.remove("open"); renderAll(); } });
+
+// [공용] 짧은 토스트 안내
+let __toastTimer=null;
+function showToast(msg){
+  const t=$("toast"); if(!t) return;
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(__toastTimer);
+  __toastTimer=setTimeout(()=>t.classList.remove("show"), 2200);
 }
-// [6단계] 알림 설정
-function openNotify(){
-  $("notifyEnabled").checked = notify.enabled;
-  $("notifyTime").value = notify.time || "18:30";
-  $("notifyMsg").textContent = (typeof Notification!=="undefined" && Notification.permission==="denied") ? "브라우저 알림이 차단돼 있어요. 기기 설정에서 허용해주세요." : "";
-  $("notifyOverlay").classList.add("open");
+
+// [프로필 탭] 알림 요일 칩 (월~일 표시, 내부 값은 0=일~6=토)
+const DOW_UI=[{lbl:"월",v:1},{lbl:"화",v:2},{lbl:"수",v:3},{lbl:"목",v:4},{lbl:"금",v:5},{lbl:"토",v:6},{lbl:"일",v:0}];
+function renderDowChips(){
+  const wrap=$("pfDow"); wrap.innerHTML="";
+  const days=notify.days||[0,1,2,3,4,5,6];
+  DOW_UI.forEach(d=>{
+    const b=document.createElement("button"); b.type="button"; b.className="dow-chip"+(days.includes(d.v)?" on":""); b.textContent=d.lbl;
+    b.onclick=()=>{
+      const set=new Set(notify.days||[0,1,2,3,4,5,6]);
+      if(set.has(d.v)) set.delete(d.v); else set.add(d.v);
+      notify.days=[...set]; save(); renderDowChips();
+      $("pfNotifyMsg").textContent="알림 요일이 저장됐어요.";
+    };
+    wrap.appendChild(b);
+  });
 }
-$("lnbNotify").onclick=()=>{ closeLnb(); openNotify(); };
-$("notifyEnabled").onchange = async ()=>{
-  if($("notifyEnabled").checked){
-    // 1) 알림 권한
+// [프로필 탭] 알림 on/off (권한 요청 + 웹푸시 구독)
+function renderNotifySettings(){
+  $("pfNotifyEnabled").checked = notify.enabled;
+  $("pfNotifyTime").value = notify.time || "18:30";
+  renderDowChips();
+}
+$("pfNotifyEnabled").onchange = async ()=>{
+  if($("pfNotifyEnabled").checked){
     if(typeof Notification!=="undefined" && Notification.requestPermission){
       let perm = Notification.permission;
       if(perm==="default") perm = await Notification.requestPermission();
-      if(perm!=="granted"){ $("notifyEnabled").checked=false; notify.enabled=false; save(); $("notifyMsg").textContent="알림 권한이 필요해요. 브라우저/기기 설정에서 허용해주세요."; return; }
+      if(perm!=="granted"){ $("pfNotifyEnabled").checked=false; notify.enabled=false; save(); $("pfNotifyMsg").textContent="알림 권한이 필요해요. 브라우저/기기 설정에서 허용해주세요."; return; }
     }
-    // 2) 웹푸시 구독 (로그인 필요)
-    $("notifyMsg").textContent="알림 설정 중…";
+    $("pfNotifyMsg").textContent="알림 설정 중…";
     const res = window.subscribePush ? await window.subscribePush() : {ok:false, reason:"미지원"};
     if(!res.ok){
-      $("notifyEnabled").checked=false; notify.enabled=false; save();
-      $("notifyMsg").textContent = (res.reason==="로그인 필요") ? "알림을 받으려면 먼저 로그인해주세요." : ("알림 설정 실패: "+res.reason);
+      $("pfNotifyEnabled").checked=false; notify.enabled=false; save();
+      $("pfNotifyMsg").textContent = (res.reason==="로그인 필요") ? "알림을 받으려면 먼저 로그인해주세요." : ("알림 설정 실패: "+res.reason);
       return;
     }
-    notify.enabled=true; $("notifyMsg").textContent="알림이 켜졌어요! 매일 "+(notify.time||"18:30")+"에 알려드릴게요.";
+    notify.enabled=true; $("pfNotifyMsg").textContent="알림이 켜졌어요!";
   } else {
     notify.enabled=false; if(window.unsubscribePush) await window.unsubscribePush();
-    $("notifyMsg").textContent="알림을 껐어요.";
+    $("pfNotifyMsg").textContent="알림을 껐어요.";
   }
   save();
 };
-$("notifyTime").onchange = ()=>{ notify.time = $("notifyTime").value || "18:30"; save(); $("notifyMsg").textContent="알림 시간이 저장됐어요."; };
-$("notifyClose").onclick=()=>$("notifyOverlay").classList.remove("open");
-$("notifyOverlay").addEventListener("click",(e)=>{ if(e.target.id==="notifyOverlay") $("notifyOverlay").classList.remove("open"); });
-
-$("openDislikes").onclick=()=>{ renderDislikeList(); $("dislikeOverlay").classList.add("open"); setTimeout(()=>$("dislikeInput").focus(),50); };
-$("dislikeAdd").onclick=addDislike;
-$("dislikeInput").addEventListener("keydown",e=>{ if(e.key==="Enter") addDislike(); });
-$("dislikeClose").onclick=()=>{ $("dislikeOverlay").classList.remove("open"); renderAll(); };
-$("dislikeOverlay").addEventListener("click",(e)=>{ if(e.target.id==="dislikeOverlay"){ $("dislikeOverlay").classList.remove("open"); renderAll(); } });
+$("pfNotifyTime").onchange = ()=>{ notify.time = $("pfNotifyTime").value || "18:30"; save(); $("pfNotifyMsg").textContent="알림 시간이 저장됐어요."; };
 
 // [Part A] 회원 정보 관리 팝업 닫기 (열기·저장은 Supabase 모듈에서)
 $("profClose").onclick=()=>$("profileOverlay").classList.remove("open");
@@ -2187,9 +2336,55 @@ $("confirmYes").onclick=()=>{ const f=__confirmYes; closeConfirm(); if(f) f(); }
 $("confirmNo").onclick=closeConfirm;
 $("confirmOverlay").addEventListener("click",(e)=>{ if(e.target.id==="confirmOverlay") closeConfirm(); });
 
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(overlay.classList.contains("open"))closeDialog(); if(catOverlay.classList.contains("open"))closeCatManage(); if(copyOverlay.classList.contains("open"))closeCopyDialog(); if(groupOverlay.classList.contains("open"))closeGroupManage(); if(lnbOverlay.classList.contains("open"))closeLnb(); if($("confirmOverlay").classList.contains("open"))closeConfirm(); if($("contactOverlay").classList.contains("open"))$("contactOverlay").classList.remove("open"); } });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(overlay.classList.contains("open"))closeDialog(); if(catOverlay.classList.contains("open"))closeCatManage(); if(copyOverlay.classList.contains("open"))closeCopyDialog(); if(groupOverlay.classList.contains("open"))closeGroupManage(); if($("confirmOverlay").classList.contains("open"))closeConfirm(); if($("contactOverlay").classList.contains("open"))$("contactOverlay").classList.remove("open"); } });
 
-load(); renderAll();
+/* ===== [프로필 탭] 나머지 항목들 ===== */
+// 닉네임 입력 (blur/Enter 시 저장)
+$("pfNick").addEventListener("change", ()=>{ nickname=$("pfNick").value.trim(); save(); });
+function renderProfileTab(){
+  $("pfNick").value = nickname || "";
+  renderNotifySettings();
+}
+// 그룹관리 (헤더 드롭다운의 '그룹 관리'와 동일한 팝업)
+$("pfGroups").onclick=openGroupManage;
+// 버전 최신 업데이트 → 새로고침해서 최신 서비스워커/파일을 받아옴
+$("pfUpdate").onclick=()=>{ window.location.reload(); };
+// 도움말/피드백/공유는 아래에서 각각 wiring
+// [지원] 피드백 남기기
+let fbType="feature";
+document.querySelectorAll(".fb-type").forEach(b=>{
+  b.onclick=()=>{ fbType=b.dataset.fb; document.querySelectorAll(".fb-type").forEach(x=>x.classList.toggle("active", x===b)); };
+});
+$("pfFeedback").onclick=()=>{
+  fbType="feature";
+  document.querySelectorAll(".fb-type").forEach(x=>x.classList.toggle("active", x.dataset.fb==="feature"));
+  $("feedbackText").value=""; $("feedbackMsg").textContent="";
+  $("feedbackOverlay").classList.add("open");
+};
+$("feedbackClose").onclick=()=>$("feedbackOverlay").classList.remove("open");
+$("feedbackOverlay").addEventListener("click",(e)=>{ if(e.target.id==="feedbackOverlay") $("feedbackOverlay").classList.remove("open"); });
+$("feedbackSend").onclick=async ()=>{
+  const text=$("feedbackText").value.trim();
+  if(!text){ $("feedbackMsg").textContent="내용을 입력해주세요."; return; }
+  $("feedbackMsg").textContent="보내는 중…";
+  const res = window.sendFeedback ? await window.sendFeedback(fbType, text) : {ok:false};
+  if(res.ok){
+    $("feedbackOverlay").classList.remove("open");
+    showToast("소중한 의견 감사해요! 🙏");
+  } else {
+    $("feedbackMsg").textContent="전송 실패했어요. 잠시 후 다시 시도해주세요.";
+  }
+};
+// [공유] 친구에게 공유하기
+$("pfShare").onclick=async ()=>{
+  const shareData={ title:"모먹지", text:"오늘 뭐 먹지? 고민될 땐 모먹지!", url:window.location.origin };
+  if(navigator.share){ try{ await navigator.share(shareData); }catch(e){} }
+  else { copyToClipboard(shareData.url, ()=>showToast("링크가 복사됐어요.")); }
+};
+
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("dislikeOverlay").classList.contains("open")){ $("dislikeOverlay").classList.remove("open"); renderAll(); } if($("feedbackOverlay").classList.contains("open")) $("feedbackOverlay").classList.remove("open"); } });
+
+load(); renderAll(); renderProfileTab();
 </script>
 
 <!-- ===== PWA 서비스워커 등록 =====
@@ -2204,9 +2399,9 @@ load(); renderAll();
   const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
-  // [설치 버튼] 상황에 따라 LNB '홈 화면에 설치' 표시/숨김
+  // [설치 버튼] 상황에 따라 프로필 탭 '홈화면 설치' 표시/숨김
   function refreshInstallItem(){
-    const item = el("lnbInstall");
+    const item = el("pfInstall");
     if(!item) return;
     if(isStandalone) item.style.display = "none";            // 이미 설치됨
     else if(deferredPrompt || isIOS) item.style.display = "flex"; // 설치 가능 or iOS(안내)
@@ -2223,9 +2418,8 @@ load(); renderAll();
     refreshInstallItem();
 
     // 설치 버튼 클릭
-    const item = el("lnbInstall");
+    const item = el("pfInstall");
     if(item) item.onclick = async () => {
-      if(window.closeLnb) window.closeLnb();
       if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; refreshInstallItem(); }
       else if(isIOS){ el("installOverlay").classList.add("open"); }  // iOS는 안내 팝업
     };
@@ -2273,8 +2467,9 @@ const $ = (id) => document.getElementById(id);
 const authOverlay = $("authOverlay");
 const boxOut = $("authLoggedOut"), boxIn = $("authLoggedIn");
 const emailEl = $("authEmail"), passEl = $("authPass"), msgEl = $("authMsg");
-// LNB 계정 영역 + 동기화 상태 (로그인 상태 표시는 이제 LNB에서)
-const lnbAccOut = $("lnbAccOut"), lnbAccIn = $("lnbAccIn"), lnbEmailEl = $("lnbAccEmail"), syncEl = $("lnbSync");
+// [프로필 탭] 계정 표시 요소
+const pfId = $("pfId"), pfEmail = $("pfEmail"), pfBackupRow = $("pfBackupRow"), syncEl = $("pfSync");
+const pfLoginBtn = $("pfLoginBtn"), pfLogoutBtn = $("pfLogout"), pfWithdrawBtn = $("pfWithdraw");
 
 let currentUser = null;   // 현재 로그인한 사용자 (없으면 null)
 let syncedUserId = null;  // 이미 동기화를 마친 사용자 id (중복 방지)
@@ -2287,13 +2482,16 @@ function closeAuth(){ authOverlay.classList.remove("open"); }
 // ---- 로그인 상태에 따라 화면 갱신 ----
 function renderAuthView(){
   const on = !!currentUser;
-  // 로그인 팝업: 항상 로그인 폼만 사용 (로그인 상태 표시는 LNB로 이동)
+  // 로그인 팝업: 항상 로그인 폼만 사용 (로그인 상태 표시는 프로필 탭에서)
   boxOut.style.display = on ? "none" : "block";
   boxIn.style.display  = "none";
-  // LNB 계정 영역 전환
-  if(lnbAccOut) lnbAccOut.style.display = on ? "none" : "block";
-  if(lnbAccIn)  lnbAccIn.style.display  = on ? "block" : "none";
-  if(on && lnbEmailEl) lnbEmailEl.textContent = currentUser.email || "";
+  // [프로필 탭] 아이디/이메일/백업 행 + 로그인·로그아웃·탈퇴 버튼 전환
+  if(pfId) pfId.textContent = on ? (currentUser.email||"").split("@")[0] : "로그인 필요";
+  if(pfEmail) pfEmail.textContent = on ? (currentUser.email||"") : "로그인 필요";
+  if(pfBackupRow) pfBackupRow.style.display = on ? "block" : "none";  // [요청] 클라우드 백업은 로그인 시에만 노출
+  if(pfLoginBtn) pfLoginBtn.style.display = on ? "none" : "flex";
+  if(pfLogoutBtn) pfLogoutBtn.style.display = on ? "inline" : "none";
+  if(pfWithdrawBtn) pfWithdrawBtn.style.display = on ? "inline" : "none";
   // [그룹 기능] 로그인했을 때만 헤더 그룹 드롭다운을 보여줌
   const gd = document.getElementById("groupDd");
   if(gd) gd.style.display = on ? "block" : "none";
@@ -2378,7 +2576,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   renderAuthView();
   // [5단계] 비밀번호 재설정 링크로 접속한 경우 → 새 비밀번호 입력 팝업
   if(event === "PASSWORD_RECOVERY"){
-    if(window.closeLnb) window.closeLnb();
     closeAuth();
     $("profEmail").textContent = currentUser?.email || "";
     $("profPass").value = "";
@@ -2399,24 +2596,23 @@ $("authCloseBtn").onclick = closeAuth;
 $("authDoneBtn").onclick = closeAuth;
 authOverlay.addEventListener("click", (e)=>{ if(e.target===authOverlay) closeAuth(); });
 
-// LNB의 '로그인' 버튼 → 로그인 팝업 열기
-$("lnbLoginBtn").onclick = () => { if(window.closeLnb) window.closeLnb(); openAuth(); };
+// [프로필 탭] '로그인 / 회원가입' 버튼
+pfLoginBtn.onclick = () => openAuth();
 
-// LNB의 '회원 정보 관리' → 로그인 상태면 팝업, 아니면 로그인 유도
-$("lnbProfile").onclick = () => {
-  if(window.closeLnb) window.closeLnb();
-  if(!currentUser){ openAuth(); return; }
-  $("profEmail").textContent = currentUser.email || "";
-  $("profMsg").textContent = ""; $("profPass").value = "";
-  $("profileOverlay").classList.add("open");
-};
-// 비밀번호 변경
+// 비밀번호 변경 (비밀번호 재설정 이메일 링크로 접속했을 때만 뜨는 팝업)
 $("profSave").onclick = async () => {
   const pw = $("profPass").value;
   if(pw.length < 6){ $("profMsg").textContent = "비밀번호는 6자 이상이어야 해요."; return; }
   $("profMsg").textContent = "변경 중…";
   const { error } = await supabase.auth.updateUser({ password: pw });
   $("profMsg").textContent = error ? ("변경 실패: " + error.message) : "비밀번호가 변경되었습니다.";
+};
+
+// [프로필 탭] 내 데이터 백업하기 → 지금 즉시 클라우드에 저장
+$("pfBackup").onclick = async () => {
+  if(!currentUser) return;
+  syncEl.textContent = "백업 중…";
+  await cloudPush();
 };
 
 // [5단계] 비밀번호 재설정 메일 보내기
@@ -2440,11 +2636,44 @@ $("authLoginBtn").onclick = async () => {
   if(error){ msgEl.textContent = "로그인 실패: " + error.message; }
   else { msgEl.textContent = ""; }
 };
-// LNB의 '로그아웃' 버튼
-$("lnbLogoutBtn").onclick = async () => {
+// [프로필 탭] '로그아웃' 텍스트 버튼
+pfLogoutBtn.onclick = async () => {
   await supabase.auth.signOut();
   if(syncEl) syncEl.textContent = "";
-  if(window.closeLnb) window.closeLnb();
+  if(window.renderProfileTab) window.renderProfileTab();
+};
+
+// [프로필 탭] '회원탈퇴' 텍스트 버튼 → 확인 후 계정+클라우드 데이터 영구 삭제
+pfWithdrawBtn.onclick = () => {
+  if(!currentUser) return;
+  window.showConfirm(
+    "회원탈퇴하면 계정과 클라우드에 백업된 모든 데이터가 영구적으로 삭제돼요. 이 작업은 되돌릴 수 없어요. 정말 탈퇴할까요?",
+    async () => {
+      pfWithdrawBtn.disabled = true;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const { error } = await supabase.functions.invoke("delete-account", {
+        headers: token ? { Authorization: "Bearer " + token } : {},
+      });
+      pfWithdrawBtn.disabled = false;
+      if(error){ if(window.showToast) window.showToast("탈퇴 처리에 실패했어요. 잠시 후 다시 시도해주세요."); return; }
+      await supabase.auth.signOut();
+      try{ localStorage.removeItem("menu-slot-data-v5"); }catch(e){}
+      window.location.reload();
+    },
+    { title:"회원탈퇴", yes:"탈퇴", no:"취소" }
+  );
+};
+
+// [지원] 피드백 전송 → Supabase feedback 테이블에 저장 (앱에서 fbType/텍스트 넘겨줌)
+window.sendFeedback = async function(type, text){
+  try{
+    const { error } = await supabase.from("feedback").insert({
+      type, message: text, user_id: currentUser ? currentUser.id : null, email: currentUser ? currentUser.email : null,
+    });
+    if(error){ console.log("feedback insert 오류:", error); return { ok:false }; }
+    return { ok:true };
+  }catch(e){ return { ok:false }; }
 };
 </script>
 </body>
