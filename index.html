@@ -122,6 +122,8 @@
   /* 로그인 팝업 안에서 쓰는 상태 문구 */
   .auth-line { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5; }
   .auth-line b { color: var(--text-body); }
+  /* 약관/개인정보 본문 (스크롤) */
+  .doc-body { font-size: 13px; line-height: 1.7; color: var(--text-body); white-space: pre-wrap; max-height: 60vh; overflow-y: auto; margin-bottom: 14px; word-break: keep-all; }
 
   /* ===== [Part A] 새 헤더: 로고(좌) · 그룹 드롭다운 · 메뉴 버튼(우) ===== */
   .app-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; position: relative; }
@@ -335,6 +337,11 @@
     -webkit-tap-highlight-color: transparent;
   }
   .chip .chip-label { font-size: 14px; font-weight: 700; color: var(--text-body); line-height: 1; }
+  /* [4단계] 즐겨찾기 별표 */
+  .chip-star { display: inline-flex; align-items: center; justify-content: center; border: none; background: none; cursor: pointer; padding: 0; margin-right: -2px; color: var(--text-muted); flex-shrink: 0; }
+  .chip-star .material-symbols-rounded { font-size: 16px; }
+  .chip-star.on { color: var(--surface-brand); }
+  .chip-star.on .material-symbols-rounded { font-variation-settings: 'FILL' 1; }
   .chip:hover { border-color: var(--border-muted); }
   /* 선택됨: 연한 회색(secondary) */
   .chip.on { border-color: #c8c8c8; background: #ececec; }
@@ -599,6 +606,7 @@
       <div class="card-head">
         <h2>메뉴 관리 <span class="count" id="count"></span></h2>
         <div class="head-actions">
+          <button class="icon-btn" id="openDislikes" title="못 먹는 음식"><span class="material-symbols-rounded">no_meals</span></button>
           <button class="icon-btn" id="editModeBtn" title="편집 모드"><span class="material-symbols-rounded">edit</span></button>
           <button class="icon-btn" id="openCatSettings" title="카테고리 설정"><span class="material-symbols-rounded">settings</span></button>
         </div>
@@ -733,6 +741,8 @@
       <button class="lnb-item" id="lnbAppInfo"><span class="material-symbols-rounded">info</span>앱 정보 / 버전</button>
       <button class="lnb-item" id="lnbInstall" style="display:none;"><span class="material-symbols-rounded">install_mobile</span>홈 화면에 설치</button>
       <button class="lnb-item" id="lnbContact"><span class="material-symbols-rounded">mail</span>문의하기</button>
+      <button class="lnb-item" id="lnbTerms"><span class="material-symbols-rounded">description</span>이용약관</button>
+      <button class="lnb-item" id="lnbPrivacy"><span class="material-symbols-rounded">privacy_tip</span>개인정보처리방침</button>
     </nav>
   </aside>
 </div>
@@ -758,6 +768,33 @@
 <div class="update-banner" id="updateBanner">
   <span>새 버전이 나왔어요</span>
   <button class="btn btn-soft btn-xs" id="updateReloadBtn"><span class="material-symbols-rounded">refresh</span>새로고침</button>
+</div>
+
+<!-- [4단계] 못 먹는 음식 / 알러지 관리 팝업 -->
+<div class="overlay" id="dislikeOverlay">
+  <div class="dialog">
+    <h3>못 먹는 음식 / 알러지</h3>
+    <p class="auth-line">여기에 등록한 단어가 <b>이름에 들어간 메뉴는 슬롯에서 자동 제외</b>돼요. (예: 새우, 땅콩, 오이)</p>
+    <div class="cat-add-menu" style="margin-bottom:12px;">
+      <input type="text" id="dislikeInput" class="input" maxlength="12" placeholder="예: 새우">
+      <button class="mini-add" id="dislikeAdd" title="추가"><span class="material-symbols-rounded">add</span></button>
+    </div>
+    <div class="chip-wrap" id="dislikeList" style="margin-bottom:14px;"></div>
+    <div class="dialog-actions">
+      <button class="btn btn-primary" id="dislikeClose" style="flex:1;justify-content:center;">완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- 약관/개인정보 문서 팝업 (공용) -->
+<div class="overlay" id="docOverlay">
+  <div class="dialog">
+    <h3 id="docTitle"></h3>
+    <div class="doc-body" id="docBody"></div>
+    <div class="dialog-actions">
+      <button class="btn btn-primary" id="docClose" style="flex:1;justify-content:center;">닫기</button>
+    </div>
+  </div>
 </div>
 
 <!-- [PWA] iOS 설치 안내 팝업 -->
@@ -919,6 +956,8 @@ const DEFAULT_MENUS = [
 ].map(m => ({ ...m, selected: true }));
 
 let menus = [], excluded = new Set();
+let dislikes = [];              // [4단계] 못 먹는 음식/알러지 키워드 (이름에 포함되면 슬롯 후보에서 제외)
+let favorites = new Set();      // [4단계] 즐겨찾기 메뉴 이름 (슬롯에서 뽑힐 확률 2배 + 별표)
 // 유저 그룹 (당첨 기록/후보만 그룹별 분리, 메뉴·카테고리는 공용)
 let groups = [
   { id:"default", name:"기본" },
@@ -1002,7 +1041,7 @@ function commitActiveGroup(){
 }
 function save(){
   commitActiveGroup();
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({categories,menus,groups,activeGroup,picksAll,finalsAll,orderAll})); }catch(e){}
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(getStateBlob())); }catch(e){}
   // [클라우드 동기화] 로그인 상태면 아래 훅이 클라우드에도 저장함 (아래 Supabase 모듈에서 등록).
   // 로그인 안 했으면 훅이 없어서 아무 일도 안 일어남 → 기존처럼 폰에만 저장.
   if(window.onStateSaved) window.onStateSaved();
@@ -1035,6 +1074,8 @@ function load(){
       }
       if(Object.keys(finalsAll).length===0 && data.finals && typeof data.finals==="object") finalsAll["default"]=data.finals;
       if(Object.keys(orderAll).length===0 && data.todayOrderMap && typeof data.todayOrderMap==="object") orderAll["default"]=data.todayOrderMap;
+      if(Array.isArray(data.dislikes)) dislikes=data.dislikes;            // [4단계]
+      if(Array.isArray(data.favorites)) favorites=new Set(data.favorites); // [4단계]
       // 활성 그룹이 목록에 없으면 첫 그룹으로
       if(!groups.some(g=>g.id===activeGroup)) activeGroup=groups[0].id;
       loadActiveGroupView();
@@ -1049,7 +1090,7 @@ function load(){
 // 현재 앱 데이터를 통째로 하나의 객체로 꺼냄 (클라우드에 올릴 때 사용)
 function getStateBlob(){
   commitActiveGroup();
-  return { categories, menus, groups, activeGroup, picksAll, finalsAll, orderAll };
+  return { categories, menus, groups, activeGroup, picksAll, finalsAll, orderAll, dislikes, favorites:[...favorites] };
 }
 // 클라우드에서 받은 데이터를 앱에 반영 (다른 기기에서 저장한 걸 불러올 때 사용)
 function applyStateBlob(data){
@@ -1062,6 +1103,8 @@ function applyStateBlob(data){
     if(data.picksAll && typeof data.picksAll==="object") picksAll=data.picksAll;
     if(data.finalsAll && typeof data.finalsAll==="object") finalsAll=data.finalsAll;
     if(data.orderAll && typeof data.orderAll==="object") orderAll=data.orderAll;
+    if(Array.isArray(data.dislikes)) dislikes=data.dislikes;
+    if(Array.isArray(data.favorites)) favorites=new Set(data.favorites);
     if(!groups.some(g=>g.id===activeGroup)) activeGroup=groups[0].id;
     loadActiveGroupView();
     // 폰(localStorage)에도 똑같이 저장 (클라우드 훅은 다시 안 부르게 직접 저장)
@@ -1103,7 +1146,21 @@ const reelEl=$("reel"), resultEl=$("result"), spinBtn=$("spinBtn"), confirmBtn=$
   menuBtn=$("menuBtn"), lnbOverlay=$("lnbOverlay"),
   groupOverlay=$("groupOverlay"), groupManageList=$("groupManageList"), addGroupBtn=$("addGroupBtn"), groupMsg=$("groupMsg"), groupClose=$("groupClose");
 
-function poolMenus(){ let l=menus.filter(m=>m.selected); if(excludeChk.checked) l=l.filter(m=>!excluded.has(m.name)); return l; }
+function poolMenus(){
+  let l=menus.filter(m=>m.selected);
+  if(excludeChk.checked) l=l.filter(m=>!excluded.has(m.name));
+  // [4단계] 못 먹는 음식/알러지 키워드가 이름에 포함된 메뉴는 후보에서 제외
+  if(dislikes.length) l=l.filter(m=>!dislikes.some(k=>k && m.name.includes(k)));
+  return l;
+}
+// [4단계] 즐겨찾기는 뽑힐 확률 2배 (릴/개수는 그대로, 당첨 index만 가중 선택)
+function pickWeightedIndex(list){
+  const w=list.map(m=>favorites.has(m.name)?2:1);
+  const total=w.reduce((a,b)=>a+b,0);
+  let r=Math.random()*total;
+  for(let i=0;i<list.length;i++){ r-=w[i]; if(r<0) return i; }
+  return list.length-1;
+}
 function colorOf(name){ const idx=menus.findIndex(m=>m.name===name); return COLORS[idx%COLORS.length]; }
 function dateKey(ts){ const d=new Date(ts); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function timeStr(ts){ const d=new Date(ts); const h=d.getHours(),m=String(d.getMinutes()).padStart(2,"0"); const ap=h<12?"오전":"오후"; const h12=h%12===0?12:h%12; return ap+" "+h12+":"+m; }
@@ -1115,7 +1172,7 @@ function spin(){
   if(list.length===0){ resultEl.innerHTML='후보 메뉴가 없습니다<br><span class="sub">메뉴를 선택하거나 제외를 초기화하세요</span>'; return; }
   spinning=true; spinBtn.disabled=true; confirmBtn.disabled=true; resultEl.textContent=""; currentWinner=null;
   resultActions.classList.remove("show");
-  const n=list.length, winnerIndex=Math.floor(Math.random()*n);
+  const n=list.length, winnerIndex=pickWeightedIndex(list);
   if(n===1){ setTimeout(()=>{spinning=false;spinBtn.disabled=false;finish(list[0]);},300); return; }
   const loops=6;
   reelEl.innerHTML=""; const sp=document.createElement("div"); sp.className="slot-item"; reelEl.appendChild(sp);
@@ -1602,6 +1659,8 @@ function renderMenuList(){
     items=matched;
   } else if(activeCatTab==="__all__"){
     items=matched;
+  } else if(activeCatTab==="__fav__"){
+    items=matched.filter(o=>favorites.has(o.m.name));
   } else if(activeCatTab==="__none__"){
     items=matched.filter(o=>!(o.m.categories||[]).length);
   } else {
@@ -1624,6 +1683,7 @@ function renderCatTabs(){
     return t;
   };
   catTabs.appendChild(mk("__all__","전체",null,menus.length));
+  if(favorites.size>0) catTabs.appendChild(mk("__fav__","⭐ 즐겨찾기",null,favorites.size));
   catNames().forEach(cat=>{
     const cnt=menus.filter(m=>(m.categories||[]).includes(cat)).length;
     if(cnt===0) return;
@@ -1650,6 +1710,12 @@ function buildChips(items){
       del.onclick=(e)=>{ e.stopPropagation(); removeMenu(i); };
       chip.appendChild(del);
     } else {
+      // [4단계] 즐겨찾기 별표 (칩 본체 선택과 분리)
+      const star=document.createElement("button"); star.className="chip-star"+(favorites.has(m.name)?" on":"");
+      star.title=favorites.has(m.name)?"즐겨찾기 해제":"즐겨찾기";
+      star.innerHTML='<span class="material-symbols-rounded">star</span>';
+      star.onclick=(e)=>{ e.stopPropagation(); if(favorites.has(m.name)) favorites.delete(m.name); else favorites.add(m.name); save(); renderMenuList(); };
+      chip.insertBefore(star, label);
       chip.onclick=()=>{ menus[i].selected=!menus[i].selected; afterSelectionChange(); };
     }
     wrap.appendChild(chip);
@@ -1950,6 +2016,94 @@ $("contactCopy").onclick=()=>{
     setTimeout(()=>{ b.classList.remove("done"); b.innerHTML='<span class="material-symbols-rounded">content_copy</span>이메일 복사'; }, 1600);
   });
 };
+
+// [3단계] 이용약관 / 개인정보처리방침 (초안)
+const TERMS_TEXT = `[이용약관]  (초안)
+
+제1조(목적)
+본 약관은 "모먹지"(이하 "서비스")의 이용조건 및 절차를 규정합니다.
+
+제2조(서비스 내용)
+서비스는 음식 메뉴를 무작위로 추천하고, 이용자가 등록한 메뉴·기록을 저장·동기화하는 기능을 무료로 제공합니다.
+
+제3조(계정)
+이용자는 이메일로 계정을 만들 수 있으며, 계정 정보의 관리 책임은 이용자에게 있습니다.
+
+제4조(이용자의 의무)
+이용자는 타인의 권리를 침해하거나 관련 법령에 위반되는 행위를 해서는 안 됩니다.
+
+제5조(면책)
+서비스가 제공하는 메뉴 추천은 참고용이며, 서비스는 "있는 그대로" 제공됩니다. 이용으로 발생한 결과에 대해 관련 법령이 허용하는 범위에서 책임을 지지 않습니다.
+
+제6조(지식재산권)
+서비스의 디자인·로고·콘텐츠에 대한 권리는 운영자에게 있습니다.
+
+제7조(약관의 변경)
+운영자는 필요 시 약관을 변경할 수 있으며, 변경 시 앱 내에 공지합니다.
+
+문의: w0920ys@gmail.com
+시행일: 2026-08-28`;
+
+const PRIVACY_TEXT = `[개인정보처리방침]  (초안)
+
+모먹지(이하 "서비스")는 이용자의 개인정보를 소중히 다룹니다.
+
+1. 수집하는 항목
+ - 로그인 시: 이메일 주소
+ - 서비스 이용 데이터: 이용자가 등록한 메뉴·카테고리·그룹·선택 기록 등
+
+2. 수집·이용 목적
+ - 계정 식별 및 로그인
+ - 데이터의 저장 및 기기 간 동기화
+
+3. 보관 및 파기
+ - 회원 탈퇴 또는 삭제 요청 시까지 보관하며, 이후 지체 없이 파기합니다.
+ - 로그인하지 않은 경우, 데이터는 이용자 기기(브라우저)에만 저장됩니다.
+
+4. 처리 위탁 / 제3자 제공
+ - 데이터 저장·인증: Supabase
+ - 호스팅: Vercel
+ - 위 목적 외에 개인정보를 제3자에게 판매하지 않습니다.
+
+5. 이용자의 권리
+ - 본인 개인정보의 열람·수정·삭제를 요청할 수 있습니다(앱 내 기능 또는 아래 연락처).
+
+6. 아동의 개인정보
+ - 서비스는 만 14세 미만 아동을 주 대상으로 하지 않습니다.
+
+문의: w0920ys@gmail.com
+시행일: 2026-08-28`;
+
+function openDoc(title, body){ $("docTitle").textContent=title; $("docBody").textContent=body; $("docBody").scrollTop=0; $("docOverlay").classList.add("open"); }
+$("lnbTerms").onclick=()=>{ closeLnb(); openDoc("이용약관", TERMS_TEXT); };
+$("lnbPrivacy").onclick=()=>{ closeLnb(); openDoc("개인정보처리방침", PRIVACY_TEXT); };
+$("docClose").onclick=()=>$("docOverlay").classList.remove("open");
+$("docOverlay").addEventListener("click",(e)=>{ if(e.target.id==="docOverlay") $("docOverlay").classList.remove("open"); });
+
+// [4단계] 못 먹는 음식 / 알러지 관리
+function renderDislikeList(){
+  const box=$("dislikeList"); box.innerHTML="";
+  if(dislikes.length===0){ box.innerHTML='<div class="empty-msg" style="padding:6px 2px;">등록된 항목이 없어요.</div>'; return; }
+  dislikes.forEach((k,idx)=>{
+    const chip=document.createElement("span"); chip.className="excl-chip";
+    chip.appendChild(document.createTextNode(k));
+    const x=document.createElement("button"); x.className="x"; x.title="삭제"; x.innerHTML='<span class="material-symbols-rounded">close</span>';
+    x.onclick=()=>{ dislikes.splice(idx,1); save(); renderDislikeList(); renderIdleReel(); renderPoolInfo(); };
+    chip.appendChild(x); box.appendChild(chip);
+  });
+}
+function addDislike(){
+  const v=$("dislikeInput").value.trim();
+  if(!v){ $("dislikeInput").focus(); return; }
+  if(!dislikes.includes(v)) dislikes.push(v);
+  $("dislikeInput").value=""; $("dislikeInput").focus();
+  save(); renderDislikeList(); renderIdleReel(); renderPoolInfo();
+}
+$("openDislikes").onclick=()=>{ renderDislikeList(); $("dislikeOverlay").classList.add("open"); setTimeout(()=>$("dislikeInput").focus(),50); };
+$("dislikeAdd").onclick=addDislike;
+$("dislikeInput").addEventListener("keydown",e=>{ if(e.key==="Enter") addDislike(); });
+$("dislikeClose").onclick=()=>{ $("dislikeOverlay").classList.remove("open"); renderAll(); };
+$("dislikeOverlay").addEventListener("click",(e)=>{ if(e.target.id==="dislikeOverlay"){ $("dislikeOverlay").classList.remove("open"); renderAll(); } });
 
 // [Part A] 회원 정보 관리 팝업 닫기 (열기·저장은 Supabase 모듈에서)
 $("profClose").onclick=()=>$("profileOverlay").classList.remove("open");
