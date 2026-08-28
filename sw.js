@@ -11,7 +11,7 @@
    ========================================================================= */
 
 // 앱을 수정할 때마다 이 숫자를 올려주세요 (v1 → v2 → v3 ...)
-const CACHE_VERSION = "jeomechu-slot-v18";
+const CACHE_VERSION = "jeomechu-slot-v19";
 
 // 오프라인에서도 열리게 미리 저장해 둘 파일 목록
 const FILES_TO_CACHE = [
@@ -79,6 +79,35 @@ self.addEventListener("fetch", (event) => {
           if (req.mode === "navigate") return caches.match("./index.html");
           return Response.error();
         });
+    })
+  );
+});
+
+// 4) [6단계] 푸시 알림 수신 → 알림 표시
+//    서버(스케줄러)가 웹푸시를 보내면 여기서 받아 알림을 띄웁니다.
+self.addEventListener("push", (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (e) {}
+  const title = data.title || "모먹지";
+  const body = data.body || "오늘 먹을 메뉴 정했어?";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: "./icon-192.png",
+      badge: "./icon-192.png",
+      data: { url: data.url || "./index.html" },
+    })
+  );
+});
+
+// 알림 클릭 → 앱 열기(이미 열려있으면 그 창으로 포커스)
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || "./index.html";
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const c of list) { if ("focus" in c) return c.focus(); }
+      if (clients.openWindow) return clients.openWindow(url);
     })
   );
 });

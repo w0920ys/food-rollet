@@ -738,6 +738,7 @@
     </div>
     <nav class="lnb-menu">
       <button class="lnb-item" id="lnbProfile"><span class="material-symbols-rounded">manage_accounts</span>회원 정보 관리</button>
+      <button class="lnb-item" id="lnbNotify"><span class="material-symbols-rounded">notifications</span>알림 설정</button>
       <button class="lnb-item" id="lnbAppInfo"><span class="material-symbols-rounded">info</span>앱 정보 / 버전</button>
       <button class="lnb-item" id="lnbInstall" style="display:none;"><span class="material-symbols-rounded">install_mobile</span>홈 화면에 설치</button>
       <button class="lnb-item" id="lnbContact"><span class="material-symbols-rounded">mail</span>문의하기</button>
@@ -768,6 +769,26 @@
 <div class="update-banner" id="updateBanner">
   <span>새 버전이 나왔어요</span>
   <button class="btn btn-soft btn-xs" id="updateReloadBtn"><span class="material-symbols-rounded">refresh</span>새로고침</button>
+</div>
+
+<!-- [6단계] 알림 설정 팝업 -->
+<div class="overlay" id="notifyOverlay">
+  <div class="dialog">
+    <h3>알림 설정</h3>
+    <p class="auth-line">매일 정한 시간에 <b>"오늘 먹을 메뉴 정했어?"</b> 알림을 보내드려요.</p>
+    <label class="switch-row" style="margin-bottom:14px;">
+      <span>퇴근 메뉴 알림 받기</span>
+      <span class="switch"><input type="checkbox" id="notifyEnabled"><span class="slider"></span></span>
+    </label>
+    <div class="field">
+      <label for="notifyTime">알림 시간</label>
+      <input type="time" id="notifyTime" class="input" value="18:30">
+    </div>
+    <div class="dialog-msg" id="notifyMsg"></div>
+    <div class="dialog-actions">
+      <button class="btn btn-primary" id="notifyClose" style="flex:1;justify-content:center;">완료</button>
+    </div>
+  </div>
 </div>
 
 <!-- [4단계] 못 먹는 음식 / 알러지 관리 팝업 -->
@@ -871,6 +892,9 @@
       <div class="dialog-actions" style="margin-top:8px;">
         <button class="btn btn-soft" id="authCloseBtn" style="flex:1;justify-content:center;">닫기</button>
       </div>
+      <div style="text-align:center; margin-top:12px;">
+        <button class="text-link" id="authResetBtn">비밀번호를 잊으셨나요?</button>
+      </div>
     </div>
     <!-- (나) 로그인 된 상태 -->
     <div id="authLoggedIn" style="display:none;">
@@ -958,6 +982,7 @@ const DEFAULT_MENUS = [
 let menus = [], excluded = new Set();
 let dislikes = [];              // [4단계] 못 먹는 음식/알러지 키워드 (이름에 포함되면 슬롯 후보에서 제외)
 let favorites = new Set();      // [4단계] 즐겨찾기 메뉴 이름 (슬롯에서 뽑힐 확률 2배 + 별표)
+let notify = { enabled:false, time:"18:30" };  // [6단계] 퇴근 알림 설정 (클라우드 동기화)
 // 유저 그룹 (당첨 기록/후보만 그룹별 분리, 메뉴·카테고리는 공용)
 let groups = [
   { id:"default", name:"기본" },
@@ -1075,7 +1100,8 @@ function load(){
       if(Object.keys(finalsAll).length===0 && data.finals && typeof data.finals==="object") finalsAll["default"]=data.finals;
       if(Object.keys(orderAll).length===0 && data.todayOrderMap && typeof data.todayOrderMap==="object") orderAll["default"]=data.todayOrderMap;
       if(Array.isArray(data.dislikes)) dislikes=data.dislikes;            // [4단계]
-      if(Array.isArray(data.favorites)) favorites=new Set(data.favorites); // [4단계]
+      if(Array.isArray(data.favorites)) favorites=new Set(data.favorites);
+    if(data.notify && typeof data.notify==="object") notify={ enabled:!!data.notify.enabled, time:data.notify.time||"18:30" }; // [4단계]
       // 활성 그룹이 목록에 없으면 첫 그룹으로
       if(!groups.some(g=>g.id===activeGroup)) activeGroup=groups[0].id;
       loadActiveGroupView();
@@ -1090,7 +1116,7 @@ function load(){
 // 현재 앱 데이터를 통째로 하나의 객체로 꺼냄 (클라우드에 올릴 때 사용)
 function getStateBlob(){
   commitActiveGroup();
-  return { categories, menus, groups, activeGroup, picksAll, finalsAll, orderAll, dislikes, favorites:[...favorites] };
+  return { categories, menus, groups, activeGroup, picksAll, finalsAll, orderAll, dislikes, favorites:[...favorites], notify };
 }
 // 클라우드에서 받은 데이터를 앱에 반영 (다른 기기에서 저장한 걸 불러올 때 사용)
 function applyStateBlob(data){
@@ -1105,6 +1131,7 @@ function applyStateBlob(data){
     if(data.orderAll && typeof data.orderAll==="object") orderAll=data.orderAll;
     if(Array.isArray(data.dislikes)) dislikes=data.dislikes;
     if(Array.isArray(data.favorites)) favorites=new Set(data.favorites);
+    if(data.notify && typeof data.notify==="object") notify={ enabled:!!data.notify.enabled, time:data.notify.time||"18:30" };
     if(!groups.some(g=>g.id===activeGroup)) activeGroup=groups[0].id;
     loadActiveGroupView();
     // 폰(localStorage)에도 똑같이 저장 (클라우드 훅은 다시 안 부르게 직접 저장)
@@ -1983,7 +2010,7 @@ $("lnbClose").onclick=closeLnb;
 lnbOverlay.addEventListener("click",(e)=>{ if(e.target===lnbOverlay) closeLnb(); });
 
 // [Part A] 앱 정보 팝업
-const APP_VERSION="1.2";
+const APP_VERSION="1.3";
 $("appVer").textContent=APP_VERSION;
 $("lnbAppInfo").onclick=()=>{ closeLnb(); $("appInfoOverlay").classList.add("open"); };
 $("appInfoClose").onclick=()=>$("appInfoOverlay").classList.remove("open");
@@ -2099,6 +2126,29 @@ function addDislike(){
   $("dislikeInput").value=""; $("dislikeInput").focus();
   save(); renderDislikeList(); renderIdleReel(); renderPoolInfo();
 }
+// [6단계] 알림 설정
+function openNotify(){
+  $("notifyEnabled").checked = notify.enabled;
+  $("notifyTime").value = notify.time || "18:30";
+  $("notifyMsg").textContent = (typeof Notification!=="undefined" && Notification.permission==="denied") ? "브라우저 알림이 차단돼 있어요. 기기 설정에서 허용해주세요." : "";
+  $("notifyOverlay").classList.add("open");
+}
+$("lnbNotify").onclick=()=>{ closeLnb(); openNotify(); };
+$("notifyEnabled").onchange = async ()=>{
+  if($("notifyEnabled").checked){
+    if(typeof Notification!=="undefined" && Notification.requestPermission){
+      let perm = Notification.permission;
+      if(perm==="default") perm = await Notification.requestPermission();
+      if(perm!=="granted"){ $("notifyEnabled").checked=false; notify.enabled=false; save(); $("notifyMsg").textContent="알림 권한이 필요해요. 브라우저/기기 설정에서 허용해주세요."; return; }
+    }
+    notify.enabled=true; $("notifyMsg").textContent="알림이 켜졌어요. (실제 발송은 서버 설정 후 동작)";
+  } else { notify.enabled=false; $("notifyMsg").textContent=""; }
+  save();
+};
+$("notifyTime").onchange = ()=>{ notify.time = $("notifyTime").value || "18:30"; save(); $("notifyMsg").textContent="알림 시간이 저장됐어요."; };
+$("notifyClose").onclick=()=>$("notifyOverlay").classList.remove("open");
+$("notifyOverlay").addEventListener("click",(e)=>{ if(e.target.id==="notifyOverlay") $("notifyOverlay").classList.remove("open"); });
+
 $("openDislikes").onclick=()=>{ renderDislikeList(); $("dislikeOverlay").classList.add("open"); setTimeout(()=>$("dislikeInput").focus(),50); };
 $("dislikeAdd").onclick=addDislike;
 $("dislikeInput").addEventListener("keydown",e=>{ if(e.key==="Enter") addDislike(); });
@@ -2279,9 +2329,19 @@ window.onStateSaved = function(){
 };
 
 // ---- 로그인 상태 변화 감지 (로그인/로그아웃/새로고침 후 자동로그인) ----
-supabase.auth.onAuthStateChange(async (_event, session) => {
+supabase.auth.onAuthStateChange(async (event, session) => {
   currentUser = session?.user || null;
   renderAuthView();
+  // [5단계] 비밀번호 재설정 링크로 접속한 경우 → 새 비밀번호 입력 팝업
+  if(event === "PASSWORD_RECOVERY"){
+    if(window.closeLnb) window.closeLnb();
+    closeAuth();
+    $("profEmail").textContent = currentUser?.email || "";
+    $("profPass").value = "";
+    $("profMsg").textContent = "새 비밀번호를 입력하고 '비밀번호 변경'을 눌러주세요.";
+    $("profileOverlay").classList.add("open");
+    return;
+  }
   if(currentUser){ closeAuth(); }   // 로그인되면 로그인 팝업 자동 닫기
   if(currentUser && syncedUserId !== currentUser.id){
     syncedUserId = currentUser.id;
@@ -2313,6 +2373,15 @@ $("profSave").onclick = async () => {
   $("profMsg").textContent = "변경 중…";
   const { error } = await supabase.auth.updateUser({ password: pw });
   $("profMsg").textContent = error ? ("변경 실패: " + error.message) : "비밀번호가 변경되었습니다.";
+};
+
+// [5단계] 비밀번호 재설정 메일 보내기
+$("authResetBtn").onclick = async () => {
+  const email = emailEl.value.trim();
+  if(!email){ msgEl.textContent = "이메일을 먼저 입력해주세요."; return; }
+  msgEl.textContent = "재설정 메일 보내는 중…";
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+  msgEl.textContent = error ? ("실패: " + error.message) : "재설정 링크를 이메일로 보냈어요. 메일함을 확인해주세요.";
 };
 
 $("authSignupBtn").onclick = async () => {
