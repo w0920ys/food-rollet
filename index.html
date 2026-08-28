@@ -161,6 +161,11 @@
   .lnb-item { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 10px 12px; border: none; background: none; border-radius: 10px; font-size: 15px; font-weight: 600; color: var(--text-body); cursor: pointer; text-align: left; }
   .lnb-item:hover { background: var(--surface-subtle); }
   .lnb-item .material-symbols-rounded { font-size: 22px; color: var(--text-secondary); }
+
+  /* [PWA] 새 버전 업데이트 배너 (상단 고정) */
+  .update-banner { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; z-index: 300; display: none; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: var(--action-primary); color: var(--text-on-fill); box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+  .update-banner.show { display: flex; }
+  .update-banner span { font-size: 14px; font-weight: 700; }
   h1 { font-size: 23px; font-weight: 800; letter-spacing: -0.02em; text-align: center; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; }
   .logo-symbol { font-size: 28px; background: var(--accent-fill); color: var(--text-on-fill); border-radius: 10px; width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; font-variation-settings: 'FILL' 1, 'wght' 600; }
 
@@ -726,6 +731,7 @@
     <nav class="lnb-menu">
       <button class="lnb-item" id="lnbProfile"><span class="material-symbols-rounded">manage_accounts</span>회원 정보 관리</button>
       <button class="lnb-item" id="lnbAppInfo"><span class="material-symbols-rounded">info</span>앱 정보 / 버전</button>
+      <button class="lnb-item" id="lnbInstall" style="display:none;"><span class="material-symbols-rounded">install_mobile</span>홈 화면에 설치</button>
       <button class="lnb-item" id="lnbContact"><span class="material-symbols-rounded">mail</span>문의하기</button>
     </nav>
   </aside>
@@ -744,6 +750,23 @@
     <div class="dialog-actions">
       <button class="btn btn-soft" id="profClose">닫기</button>
       <button class="btn btn-primary" id="profSave">비밀번호 변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- [PWA] 새 버전 업데이트 배너 -->
+<div class="update-banner" id="updateBanner">
+  <span>새 버전이 나왔어요</span>
+  <button class="btn btn-soft btn-xs" id="updateReloadBtn"><span class="material-symbols-rounded">refresh</span>새로고침</button>
+</div>
+
+<!-- [PWA] iOS 설치 안내 팝업 -->
+<div class="overlay" id="installOverlay">
+  <div class="dialog">
+    <h3>홈 화면에 설치</h3>
+    <p class="auth-line">사파리 아래쪽의 <b>공유 버튼</b>을 누르고<br><b>'홈 화면에 추가'</b>를 선택하면 앱처럼 설치돼요.</p>
+    <div class="dialog-actions">
+      <button class="btn btn-primary" id="installClose" style="flex:1;justify-content:center;">알겠어요</button>
     </div>
   </div>
 </div>
@@ -1894,7 +1917,7 @@ $("lnbClose").onclick=closeLnb;
 lnbOverlay.addEventListener("click",(e)=>{ if(e.target===lnbOverlay) closeLnb(); });
 
 // [Part A] 앱 정보 팝업
-const APP_VERSION="1.1";
+const APP_VERSION="1.2";
 $("appVer").textContent=APP_VERSION;
 $("lnbAppInfo").onclick=()=>{ closeLnb(); $("appInfoOverlay").classList.add("open"); };
 $("appInfoClose").onclick=()=>$("appInfoOverlay").classList.remove("open");
@@ -1958,13 +1981,60 @@ load(); renderAll();
      * file:// 로 (파일 더블클릭) 열면 동작하지 않고, https(배포)나 localhost에서만 동작합니다.
      * try/catch로 감싸서, 혹시 실패해도 앱 자체는 정상 동작하도록 했습니다. -->
 <script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("sw.js").catch((err) => {
-        console.log("서비스워커 등록 실패(무시 가능):", err);
-      });
-    });
+(function(){
+  // 다른 스크립트의 전역과 안 겹치게 IIFE로 격리
+  const el = (id) => document.getElementById(id);
+  let deferredPrompt = null;  // 안드로이드/데스크톱 설치 프롬프트 보관
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+  // [설치 버튼] 상황에 따라 LNB '홈 화면에 설치' 표시/숨김
+  function refreshInstallItem(){
+    const item = el("lnbInstall");
+    if(!item) return;
+    if(isStandalone) item.style.display = "none";            // 이미 설치됨
+    else if(deferredPrompt || isIOS) item.style.display = "flex"; // 설치 가능 or iOS(안내)
+    else item.style.display = "none";
   }
+  // 안드로이드/데스크톱 크롬: 기본 설치배너 가로채서 우리 버튼으로
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; refreshInstallItem(); });
+  window.addEventListener("appinstalled", () => { deferredPrompt = null; refreshInstallItem(); });
+
+  // [새 버전 배너]
+  function showUpdateBanner(){ const b = el("updateBanner"); if(b) b.classList.add("show"); }
+
+  window.addEventListener("load", () => {
+    refreshInstallItem();
+
+    // 설치 버튼 클릭
+    const item = el("lnbInstall");
+    if(item) item.onclick = async () => {
+      if(window.closeLnb) window.closeLnb();
+      if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; refreshInstallItem(); }
+      else if(isIOS){ el("installOverlay").classList.add("open"); }  // iOS는 안내 팝업
+    };
+    if(el("installClose")) el("installClose").onclick = () => el("installOverlay").classList.remove("open");
+    if(el("installOverlay")) el("installOverlay").addEventListener("click", (e)=>{ if(e.target.id==="installOverlay") e.target.classList.remove("open"); });
+
+    // 새로고침 버튼 → 최신 버전으로 갱신
+    if(el("updateReloadBtn")) el("updateReloadBtn").onclick = () => window.location.reload();
+
+    // 서비스워커 등록 + 새 버전 감지
+    if("serviceWorker" in navigator){
+      navigator.serviceWorker.register("sw.js").then((reg) => {
+        if(reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(); // 이미 대기 중인 새 버전
+        reg.addEventListener("updatefound", () => {
+          const nw = reg.installing; if(!nw) return;
+          nw.addEventListener("statechange", () => {
+            // 기존 컨트롤러가 있는데 새 워커가 설치됨 = 업데이트 있음
+            if(nw.state === "installed" && navigator.serviceWorker.controller) showUpdateBanner();
+          });
+        });
+        setInterval(() => reg.update().catch(()=>{}), 60*60*1000); // 1시간마다 업데이트 확인
+      }).catch((err) => console.log("서비스워커 등록 실패(무시 가능):", err));
+    }
+  });
+})();
 </script>
 
 <!-- ===== 로그인 + 클라우드 저장 (Supabase) =====
