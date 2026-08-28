@@ -1065,6 +1065,9 @@
         <input type="text" id="roomMenuInput" class="input" maxlength="16" placeholder="예: 초밥">
         <button class="mini-add" id="roomSubmitBtn" title="제출"><span class="material-symbols-rounded">check</span></button>
       </div>
+      <div style="text-align:right; margin-top:6px;">
+        <button class="text-link" id="roomCancelEntryBtn" style="display:none;">내 제출 취소</button>
+      </div>
     </div>
 
     <div class="pf-sub" style="padding:4px 2px 6px;">참여자 (<span id="roomEntryCount">0</span>)</div>
@@ -1072,6 +1075,9 @@
 
     <div class="dialog-actions" id="roomHostActions" style="display:none;">
       <button class="btn btn-brand" id="roomSpinBtn" style="flex:1;justify-content:center;"><span class="material-symbols-rounded">casino</span>다같이 돌리기!</button>
+    </div>
+    <div style="text-align:center; margin-bottom:6px;">
+      <button class="text-link" id="roomCancelRoomBtn" style="display:none;">방 취소하기</button>
     </div>
     <div class="dialog-actions">
       <button class="btn btn-soft" id="roomShareAgainBtn"><span class="material-symbols-rounded">share</span>초대 문구 복사</button>
@@ -2233,7 +2239,7 @@ groupOverlay.addEventListener("click",e=>{ if(e.target===groupOverlay) closeGrou
 groupDdBtn.onclick=(e)=>{ e.stopPropagation(); groupDdPanel.classList.toggle("open"); };
 document.addEventListener("click",(e)=>{ if(groupDdPanel.classList.contains("open") && !groupDd.contains(e.target)) groupDdPanel.classList.remove("open"); });
 
-const APP_VERSION="1.6";
+const APP_VERSION="1.7";
 $("pfVer").textContent="v"+APP_VERSION;
 
 // [공용] 텍스트를 클립보드에 복사 (성공 시 onOk 콜백)
@@ -2553,6 +2559,8 @@ $("roomMenuInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preven
 $("roomSubmitBtn").onclick=()=>{ if(window.submitRoomEntry) window.submitRoomEntry(); };
 $("roomSpinBtn").onclick=()=>{ if(window.spinRoom) window.spinRoom(); };
 $("roomShareAgainBtn").onclick=()=>{ if(window.shareCurrentRoom) window.shareCurrentRoom(); };
+$("roomCancelEntryBtn").onclick=()=>{ if(window.deleteMyRoomEntry) window.deleteMyRoomEntry(); };
+$("roomCancelRoomBtn").onclick=()=>{ if(window.cancelRoom) window.cancelRoom(); };
 
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("dislikeOverlay").classList.contains("open")){ $("dislikeOverlay").classList.remove("open"); renderAll(); } if($("feedbackOverlay").classList.contains("open")) $("feedbackOverlay").classList.remove("open"); if($("roomOverlay").classList.contains("open")) closeRoomOverlay(); } });
 
@@ -2978,10 +2986,14 @@ function renderRoomView(){
   $("roomEntryCount").textContent = String(roomEntries.length);
   $("roomMenuInput").value = mine ? (mine.menu_name||"") : "";
   $("roomEntryField").style.display = room.status==="done" ? "none" : "";
+  // [보완] 내가 이미 제출했으면 '내 제출 취소' 노출 (방이 열려있을 때만)
+  $("roomCancelEntryBtn").style.display = (mine && room.status==="open") ? "inline" : "none";
 
   const canSpin = isHost && room.status==="open" && roomEntries.some(e=>e.menu_name);
   $("roomHostActions").style.display = (isHost && room.status==="open") ? "flex" : "none";
   $("roomSpinBtn").disabled = !canSpin;
+  // [보완] 방장은 방이 열려있는 동안 '방 취소하기' 가능
+  $("roomCancelRoomBtn").style.display = (isHost && room.status==="open") ? "inline" : "none";
 
   if(room.status==="done") $("roomStatusLabel").textContent="당첨 결과가 나왔어요!";
   else if(isHost) $("roomStatusLabel").textContent="각자 먹고 싶은 메뉴를 적으면, 내가 다같이 돌릴 수 있어요.";
@@ -3005,6 +3017,12 @@ function subscribeRoom(roomId){
     })
     .on("postgres_changes", { event:"UPDATE", schema:"public", table:"rooms", filter:"id=eq."+roomId }, (payload)=>{
       currentRoom = payload.new; renderRoomView();
+    })
+    .on("postgres_changes", { event:"DELETE", schema:"public", table:"rooms", filter:"id=eq."+roomId }, ()=>{
+      // [보완] 방장이 방을 취소하면 참여자 화면도 함께 닫힘
+      if(window.showToast) window.showToast("방장이 방을 취소했어요.");
+      unsubscribeRoomChannel(); currentRoom = null;
+      const ov=$("roomOverlay"); if(ov) ov.classList.remove("open");
     })
     .subscribe();
 }
@@ -3079,6 +3097,35 @@ window.spinRoom = async function(){
     .eq("id", currentRoom.id).select().single();
   if(error){ console.log("방 스핀 오류:", error); if(window.showToast) window.showToast("돌리기에 실패했어요."); return; }
   currentRoom = updated; renderRoomView(); // 본인 화면은 Realtime 왕복을 기다리지 않고 즉시 반영
+};
+
+// [보완] 참여자가 자기 제출 메뉴를 취소(삭제) — 다시 다른 메뉴로 제출 가능
+window.deleteMyRoomEntry = async function(){
+  if(!currentRoom || !currentUser) return;
+  const { error } = await supabase.from("room_entries")
+    .delete().eq("room_id", currentRoom.id).eq("user_id", currentUser.id);
+  if(error){ console.log("메뉴 제출 취소 오류:", error); if(window.showToast) window.showToast("취소에 실패했어요."); return; }
+  roomEntries = await fetchRoomEntries(currentRoom.id);
+  renderRoomView();
+  if(window.showToast) window.showToast("제출을 취소했어요.");
+};
+
+// [보완] 방장이 방을 통째로 취소(삭제) — 아직 결과를 내지 않았을 때만
+window.cancelRoom = function(){
+  if(!currentRoom || !currentUser || currentRoom.host_user_id !== currentUser.id) return;
+  window.showConfirm(
+    "방을 취소하면 지금까지 모인 메뉴 제안이 모두 사라져요. 계속할까요?",
+    async ()=>{
+      const roomId = currentRoom.id;
+      const { error } = await supabase.from("rooms").delete().eq("id", roomId);
+      if(error){ console.log("방 취소 오류:", error); if(window.showToast) window.showToast("방 취소에 실패했어요."); return; }
+      unsubscribeRoomChannel();
+      currentRoom = null;
+      $("roomOverlay").classList.remove("open");
+      if(window.showToast) window.showToast("방을 취소했어요.");
+    },
+    { title:"방 취소하기", yes:"방 취소", no:"아니요" }
+  );
 };
 </script>
 </body>
