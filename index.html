@@ -333,7 +333,7 @@ if("serviceWorker" in navigator){
 
   /* ===== [공통 컴포넌트] 버튼 =====
      조합식: .btn (베이스) + 변형 + 크기 + 모양 + 상태
-       변형: .btn-primary(검정) / .btn-brand(오렌지) / .btn-outline(흰+테두리) / .btn-soft(옅은회색) / .btn-ghost(투명+옅은테두리)
+       변형: .btn-primary(검정) / .btn-brand(오렌지) / .btn-outline(흰+테두리) / .btn-soft(옅은회색) / .btn-ghost(투명+옅은테두리) / .btn-danger(빨강, 삭제 등 되돌릴 수 없는 액션)
        크기: (기본) / .btn-sm / .btn-xs
        모양: .btn-pill (완전 둥근)
        상태: .btn.is-on (선택/토글 켜짐) / .btn.done (복사 완료)
@@ -352,6 +352,8 @@ if("serviceWorker" in navigator){
   .btn-soft:hover { background: #ececec; }
   .btn-ghost { background: none; border: 1px solid var(--border-default); color: var(--text-secondary); }
   .btn-ghost:hover { background: var(--surface-subtle); }
+  .btn-danger { background: var(--text-danger); color: var(--text-on-fill); }
+  .btn-danger:hover { background: #a82121; }
   /* 크기(size) */
   .btn-sm { padding: 8px 15px; font-size: 14px; }
   .btn-sm .material-symbols-rounded { font-size: 18px; }
@@ -418,7 +420,7 @@ if("serviceWorker" in navigator){
   /* 칩: 최소 터치 높이 44px 확보, 기본은 border만 */
   /* ===== [공통] pill 칩 베이스 — 선택형 칩들의 공유 골격 =====
      모양(둥근 pill)/흰 배경/정렬을 한 곳에서 관리. 크기·색·테두리굵기는 각 칩이 개별 지정. */
-  .chip, .cat-tab, .cat-choice, .member-chip, .group-dd-btn {
+  .chip, .cat-tab, .cat-choice, .group-dd-btn {
     display: inline-flex; align-items: center; cursor: pointer;
     border-radius: var(--r-pill); background: var(--surface-card);
   }
@@ -440,14 +442,32 @@ if("serviceWorker" in navigator){
   .chip.on .chip-label { color: var(--text-body); }
   .chip:active { transform: scale(0.97); }
   /* 편집 모드 칩: 점선 테두리 + 텍스트 유지 + 삭제 버튼 */
-  .chip.editing { border-style: dashed; border-color: var(--border-muted); background: #fff; padding-right: 4px; cursor: default; }
+  /* [4단계 개선] 수정·삭제 버튼이 30px로 작고 서로 바짝 붙어있어 오탭 위험이 컸음 →
+     탭 영역을 키우고(30→36px) 둘 사이 간격도 넓힘(gap 6→10px). */
+  .chip.editing { border-style: dashed; border-color: var(--border-muted); background: #fff; padding-right: 2px; cursor: default; gap: 10px; }
   .chip.editing .chip-label { color: var(--text-body); }
   .chip.editing:active { transform: none; }
-  .chip-act { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; margin: -4px 0; border: none; background: none; border-radius: 999px; cursor: pointer; color: var(--text-secondary); flex-shrink: 0; }
-  .chip-act .material-symbols-rounded { font-size: 17px; }
+  .chip-act { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; margin: -6px 0; border: none; background: none; border-radius: 999px; cursor: pointer; color: var(--text-secondary); flex-shrink: 0; }
+  .chip-act .material-symbols-rounded { font-size: 18px; }
+  /* 호버가 없는 터치 환경에서도 "삭제"가 파괴적 액션임을 항상 구분할 수 있게 아이콘 색을 상시 danger로 */
+  .chip-act.del { color: var(--text-danger); }
 
   /* 카테고리 tab (관리) */
-  .cat-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+  /* [3단계 개선] 카테고리가 많아 가로 스크롤이 넘칠 때, 모바일은 스크롤바가 안 보이는 경우가
+     많아 "더 있음"을 알기 어려움. 탭이 대부분 흰 배경 아웃라인이라 흰색 그라데이션 fade만으로는
+     티가 안 나서, 배경색과 무관하게 눈에 띄는 원형 화살표 배지로 신호를 줌.
+     끝까지 스크롤하면(JS가 .cat-tabs-wrap에서 show-fade 클래스를 뗌) 사라짐. */
+  .cat-tabs-wrap { position: relative; margin-bottom: 12px; }
+  .cat-tabs-more {
+    position: absolute; right: 2px; top: 13px; width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center; border-radius: 999px;
+    background: var(--surface-card); border: 1px solid var(--border-default);
+    box-shadow: -6px 0 10px 4px var(--surface-card);
+    font-size: 17px; color: var(--text-secondary);
+    opacity: 0; pointer-events: none; transition: opacity .15s;
+  }
+  .cat-tabs-wrap.show-fade .cat-tabs-more { opacity: 1; }
+  .cat-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 0; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
   .cat-tabs::-webkit-scrollbar { height: 4px; }
   .cat-tabs::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 999px; }
   .cat-tab { flex-shrink: 0; min-height: 34px; padding: 7px 14px; border: 1px solid var(--border-default); font-size: 13px; font-weight: 700; color: var(--text-secondary); white-space: nowrap; gap: 6px; }
@@ -589,7 +609,7 @@ if("serviceWorker" in navigator){
   .cat-choices { display: flex; flex-wrap: wrap; gap: 8px; }
   .cat-choice { padding: 7px 14px; border: 1.5px solid var(--border-default); font-size: 13px; font-weight: 600; color: var(--text-secondary); }
   /* [공통] 칩 '선택됨(카테고리 색)' 상태 — bg는 JS가 카테고리 색으로 지정 */
-  .cat-choice.active, .member-chip.on { color: var(--text-on-fill); border-color: transparent; }
+  .cat-choice.active { color: var(--text-on-fill); border-color: transparent; }
   .dialog-msg { font-size: 12px; color: var(--text-danger); min-height: 16px; margin-bottom: 10px; }
   .dialog-actions { display: flex; gap: 10px; margin-top: 4px; }
   .dialog-actions .btn { flex: 1; justify-content: center; }
@@ -599,9 +619,7 @@ if("serviceWorker" in navigator){
   .cat-row-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .cat-row-top input[type=color] { width: 36px; height: 36px; border: none; border-radius: 9px; background: none; cursor: pointer; padding: 0; flex-shrink: 0; }
   .cat-row-top .input { flex: 1; }
-  .cat-members-lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
-  .cat-members { display: flex; flex-wrap: wrap; gap: 6px; }
-  .member-chip { font-size: 12px; padding: 4px 9px; border: 1.5px solid var(--border-default); color: var(--text-secondary); user-select: none; }
+  .cat-members-lbl { font-size: 12px; color: var(--text-secondary); margin-bottom: 2px; }
   .add-cat-btn { display: flex; align-items: center; justify-content: center; gap: 5px; width: 100%; padding: 11px; border: 1.5px dashed var(--border-muted); border-radius: 11px; background: var(--surface-subtle); color: var(--text-secondary); font-weight: 700; cursor: pointer; margin-bottom: 8px; }
   .add-cat-btn .material-symbols-rounded { font-size: 18px; }
   .cat-add-menu { display: flex; gap: 6px; margin-top: 8px; }
@@ -828,7 +846,7 @@ if("serviceWorker" in navigator){
         </div>
         <button class="btn btn-primary btn-sm" id="openAddBtn"><span class="material-symbols-rounded">add</span>추가</button>
       </div>
-      <div class="cat-tabs" id="catTabs"></div>
+      <div class="cat-tabs-wrap" id="catTabsWrap"><div class="cat-tabs" id="catTabs"></div><span class="cat-tabs-more material-symbols-rounded">chevron_right</span></div>
       <label class="select-all-row" id="selectAllRow">
         <input type="checkbox" id="selectAll">
         <span>이 목록 전체 선택 / 해제</span>
@@ -2133,6 +2151,14 @@ function renderCatTabs(){
   });
   const noneCnt=menus.filter(m=>!(m.categories||[]).length).length;
   if(noneCnt>0) catTabs.appendChild(mk("__none__","미분류",null,noneCnt));
+  updateCatTabsFade();
+}
+// [3단계] 카테고리 탭이 더 있는데 안 보이면 오른쪽에 fade 표시, 끝까지 스크롤하면 숨김
+function updateCatTabsFade(){
+  const wrap=$("catTabsWrap"); if(!wrap) return;
+  const scrollable = catTabs.scrollWidth > catTabs.clientWidth + 2;
+  const atEnd = catTabs.scrollLeft + catTabs.clientWidth >= catTabs.scrollWidth - 2;
+  wrap.classList.toggle("show-fade", scrollable && !atEnd);
 }
 function buildChips(items){
   const wrap=document.createElement("div"); wrap.className="chip-wrap";
@@ -2182,7 +2208,14 @@ function updateSelectAll(){
   selectAll.checked=all; selectAll.indeterminate=!all&&some;
 }
 function afterSelectionChange(){ save(); renderMenuList(); renderIdleReel(); renderPoolInfo(); }
-function removeMenu(i){ window.track("menu_deleted", {}, { edited_menus: true }); excluded.delete(menus[i].name); menus.splice(i,1); save(); renderAll(); }
+function removeMenu(i){
+  // [2단계 개선] 확인 없이 즉시 삭제되던 것을 되돌릴 수 없는 액션이니 확인 팝업 후 삭제하도록 변경.
+  const name=menus[i].name;
+  showConfirm('"'+name+'"을(를) 삭제할까요? 삭제하면 되돌릴 수 없어요.', ()=>{
+    window.track("menu_deleted", {}, { edited_menus: true });
+    excluded.delete(menus[i].name); menus.splice(i,1); save(); renderAll();
+  }, { title:"메뉴 삭제", yes:"삭제", no:"취소", danger:true });
+}
 function toggleEditMode(){
   listEditMode=!listEditMode;
   editModeBtn.classList.toggle("active", listEditMode);
@@ -2242,16 +2275,13 @@ function renderCatManage(){
     const del=document.createElement("button"); del.className="act-btn del"; del.title="삭제";
     del.innerHTML='<span class="material-symbols-rounded">delete</span>'; del.onclick=()=>deleteCategory(ci); top.appendChild(del);
     row.appendChild(top);
-    const lbl=document.createElement("div"); lbl.className="cat-members-lbl"; lbl.textContent="이 카테고리에 넣을 메뉴 (탭하여 토글)"; row.appendChild(lbl);
-    const members=document.createElement("div"); members.className="cat-members";
-    if(menus.length===0) members.innerHTML='<span class="uncat-note">등록된 메뉴 없음</span>';
-    menus.forEach((m,mi)=>{
-      const on=(m.categories||[]).includes(cat.name);
-      const chip=document.createElement("span"); chip.className="member-chip"+(on?" on":""); chip.textContent=m.name; if(on) chip.style.background=cat.color;
-      chip.onclick=()=>{ const arr=menus[mi].categories||[]; menus[mi].categories=arr.includes(cat.name)?arr.filter(c=>c!==cat.name):[...arr,cat.name]; save(); renderCatManage(); };
-      members.appendChild(chip);
-    });
-    row.appendChild(members);
+    // [1단계 개선] 카테고리별 107개 메뉴 전체를 토글하던 역방향 UI 제거.
+    // 메뉴↔카테고리 배정은 "메뉴 추가/수정" 다이얼로그(메뉴 1개→카테고리 선택) 한 방향으로 통일하고,
+    // 여기서는 현재 소속 메뉴 수만 요약해서 보여줌 (스크롤 부담·중복 편집 경로 제거).
+    const cnt=menus.filter(m=>(m.categories||[]).includes(cat.name)).length;
+    const lbl=document.createElement("div"); lbl.className="cat-members-lbl";
+    lbl.textContent="이 카테고리의 메뉴 "+cnt+"개 · 메뉴별 배정은 메뉴 추가/수정에서 설정하세요";
+    row.appendChild(lbl);
 
     // 이 카테고리에 바로 메뉴 추가
     const addWrap=document.createElement("div"); addWrap.className="cat-add-menu";
@@ -2300,10 +2330,16 @@ function renameCategory(ci,newName){
   catMsg.textContent=""; save(); renderCatManage(); renderAll();
 }
 function deleteCategory(ci){
-  const name=categories[ci].name; categories.splice(ci,1);
-  menus.forEach(m=>{ if(m.categories) m.categories=m.categories.filter(c=>c!==name); });
-  window.track("category_deleted", {});
-  save(); renderCatManage(); renderAll();
+  // [2단계 개선] 확인 없이 즉시 삭제 + 소속 메뉴 태그까지 같이 사라지던 것을 확인 팝업으로 보호.
+  const name=categories[ci].name;
+  const cnt=menus.filter(m=>(m.categories||[]).includes(name)).length;
+  const extra=cnt>0 ? " 이 카테고리가 붙어있던 메뉴 "+cnt+"개에서도 함께 빠져요." : "";
+  showConfirm('"'+name+'" 카테고리를 삭제할까요?'+extra, ()=>{
+    categories.splice(ci,1);
+    menus.forEach(m=>{ if(m.categories) m.categories=m.categories.filter(c=>c!==name); });
+    window.track("category_deleted", {});
+    save(); renderCatManage(); renderAll();
+  }, { title:"카테고리 삭제", yes:"삭제", no:"취소", danger:true });
 }
 function addCategory(){
   const used=new Set(categories.map(c=>c.color));
@@ -2464,14 +2500,16 @@ function renameGroup(id, newName){
 function deleteGroup(id){
   if(window.requireLogin && !window.requireLogin()) return;   // [로그인 게이트] 그룹 삭제는 로그인 필요
   if(groups.length<=1) return;
-  if(!confirm("이 그룹의 당첨 기록이 모두 삭제됩니다. 계속할까요?")) return;
-  groups=groups.filter(g=>g.id!==id);
-  window.track("group_deleted", {}, { group_count: groups.length });
-  delete picksAll[id]; delete finalsAll[id]; delete orderAll[id]; delete dislikesAll[id];
-  if(activeGroup===id){ activeGroup=groups[0].id; loadActiveGroupView(); selectedDate=dateKey(Date.now()); }
-  save(); renderGroupManage(); renderGroupBar(); renderTodayList(); renderIdleReel(); renderPoolInfo();
-  if($("page-history").classList.contains("active")) renderHistory();
-  showToast("그룹을 삭제했어요.");
+  // [2단계 개선] 브라우저 기본 confirm()은 앱 디자인과 동떨어져 보여서 앱 스타일 확인 팝업으로 교체.
+  showConfirm("이 그룹의 당첨 기록이 모두 삭제됩니다. 계속할까요?", ()=>{
+    groups=groups.filter(g=>g.id!==id);
+    window.track("group_deleted", {}, { group_count: groups.length });
+    delete picksAll[id]; delete finalsAll[id]; delete orderAll[id]; delete dislikesAll[id];
+    if(activeGroup===id){ activeGroup=groups[0].id; loadActiveGroupView(); selectedDate=dateKey(Date.now()); }
+    save(); renderGroupManage(); renderGroupBar(); renderTodayList(); renderIdleReel(); renderPoolInfo();
+    if($("page-history").classList.contains("active")) renderHistory();
+    showToast("그룹을 삭제했어요.");
+  }, { title:"그룹 삭제", yes:"삭제", no:"취소", danger:true });
 }
 
 document.querySelectorAll(".sub-tab").forEach(b=>b.onclick=()=>switchSubTab(b.dataset.sub));
@@ -2482,6 +2520,8 @@ openTodayCopy.onclick=()=>openCopyDialog(orderedTodayItems(), true);
 openAddBtn.onclick=()=>openDialog();
 openCatSettings.onclick=openCatManage;
 editModeBtn.onclick=toggleEditMode;
+catTabs.addEventListener("scroll", updateCatTabsFade);
+window.addEventListener("resize", updateCatTabsFade);
 function updateSearchClear(){ searchInput.closest(".search-wrap").classList.toggle("has-text", searchInput.value.length>0); }
 let phSearchTimer=null;
 searchInput.addEventListener("input", ()=>{
@@ -2517,7 +2557,7 @@ groupOverlay.addEventListener("click",e=>{ if(e.target===groupOverlay) closeGrou
 groupDdBtn.onclick=(e)=>{ e.stopPropagation(); groupDdPanel.classList.toggle("open"); };
 document.addEventListener("click",(e)=>{ if(groupDdPanel.classList.contains("open") && !groupDd.contains(e.target)) groupDdPanel.classList.remove("open"); });
 
-const APP_VERSION="1.9";
+const APP_VERSION="1.10";
 $("pfVer").textContent="v"+APP_VERSION;
 if(window.__ph) window.__ph("register", { app_version: APP_VERSION });
 
@@ -2813,6 +2853,9 @@ function showConfirm(msg, onYes, opts){
   $("confirmMsg").textContent = msg;
   $("confirmYes").textContent = opts.yes || "확인";
   $("confirmNo").textContent = opts.no || "아니요";
+  // [2단계 개선] 삭제처럼 되돌릴 수 없는 액션은 확인 버튼을 빨간색(danger)으로 구분 표시
+  $("confirmYes").classList.toggle("btn-danger", !!opts.danger);
+  $("confirmYes").classList.toggle("btn-primary", !opts.danger);
   __confirmYes = onYes;
   $("confirmOverlay").classList.add("open");
 }
