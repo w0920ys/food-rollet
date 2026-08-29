@@ -1059,7 +1059,7 @@ if("serviceWorker" in navigator){
 <div class="overlay" id="groupOverlay">
   <div class="dialog">
     <h3>그룹 관리</h3>
-    <p class="auth-line">그룹 이름을 바꾸거나, <b>구성원을 추가해 각자 못 먹는 음식</b>을 등록할 수 있어요.</p>
+    <p class="auth-line">그룹 이름을 바꾸거나, <b>구성원을 추가해 각자 못 먹는 음식</b>을 등록할 수 있어요. "해산물", "우유", "밀/글루텐" 처럼 큰 분류로 적어도 관련 메뉴가 자동으로 함께 제외돼요.</p>
     <div class="group-manage-list" id="groupManageList"></div>
     <button class="add-cat-btn" id="addGroupBtn"><span class="material-symbols-rounded">add</span>그룹 추가</button>
     <div class="dialog-msg" id="groupMsg"></div>
@@ -1548,9 +1548,40 @@ const reelEl=$("reel"), resultEl=$("result"), spinBtn=$("spinBtn"), confirmBtn=$
   groupDd=$("groupDd"), groupDdBtn=$("groupDdBtn"), groupDdLabel=$("groupDdLabel"), groupDdPanel=$("groupDdPanel"), groupDdList=$("groupDdList"), groupManageBtn=$("groupManageBtn"),
   groupOverlay=$("groupOverlay"), groupManageList=$("groupManageList"), addGroupBtn=$("addGroupBtn"), groupMsg=$("groupMsg"), groupClose=$("groupClose");
 
-// 활성 그룹의 모든 사람이 못 먹는 키워드를 하나로 합침
+// [알러지 카테고리 자동 매칭] "해산물"처럼 큰 분류로 등록해도, 실제 메뉴 이름에 나올 만한
+// 세부 키워드들로 자동 확장해서 함께 제외합니다. (알러지는 놓치는 것보다 과하게 걸러지는 게 안전하므로
+// 조금 넓게 잡습니다. 완벽한 성분 판별은 아니라서, 중요한 알러지는 메뉴를 직접 눈으로도 확인해주세요.)
+const ALLERGEN_EXPAND = {
+  "해산물": ["새우","오징어","게","조개","굴","전복","낙지","문어","홍합","꼬막","쭈꾸미","생선","회","초밥","감바스","골뱅이"],
+  "갑각류": ["새우","게","랍스터","가재"],
+  "조개류": ["조개","홍합","전복","굴","꼬막","골뱅이"],
+  "우유": ["우유","치즈","크림","라떼","버터","요거트","요구르트"],
+  "유제품": ["우유","치즈","크림","라떼","버터","요거트","요구르트"],
+  "계란": ["계란","달걀","마요"],
+  "달걀": ["계란","달걀","마요"],
+  "밀": ["빵","면","파스타","라면","우동","짜장","짬뽕","돈까스","튀김","부침개","전","만두"],
+  "글루텐": ["빵","면","파스타","라면","우동","짜장","짬뽕","돈까스","튀김","부침개","전","만두"],
+  "메밀": ["메밀","막국수","냉모밀"],
+  "땅콩": ["땅콩"],
+  "견과류": ["땅콩","호두","아몬드","잣","견과"],
+  "돼지고기": ["돼지","삼겹살","목살","제육","족발","보쌈","돈까스","베이컨"],
+  "소고기": ["소고기","불고기","스테이크","갈비","곱창","막창","육회"],
+  "닭고기": ["치킨","닭"],
+  "알콜": ["맥주","소주","와인","막걸리","하이볼","칵테일","사케"],
+  "술": ["맥주","소주","와인","막걸리","하이볼","칵테일","사케"],
+};
+// 등록한 키워드 하나를 (카테고리면) 세부 키워드들로 확장. 카테고리가 아니면 원래 단어 그대로.
+function expandAllergenKeyword(raw){
+  const set=new Set([raw]);
+  if(ALLERGEN_EXPAND[raw]) ALLERGEN_EXPAND[raw].forEach(w=>set.add(w));
+  return [...set];
+}
+// 활성 그룹의 모든 사람이 못 먹는 키워드를 하나로 합치고, 카테고리 단어는 세부 키워드로 확장
 function dislikeKeywords(){
-  return dislikes.flatMap(p=>p.items||[]).filter(Boolean);
+  const raw = dislikes.flatMap(p=>p.items||[]).filter(Boolean);
+  const expanded = new Set();
+  raw.forEach(k=> expandAllergenKeyword(k).forEach(w=>expanded.add(w)));
+  return [...expanded];
 }
 function poolMenus(){
   let l=menus.filter(m=>m.selected);
@@ -2388,6 +2419,8 @@ function renderGroupManage(){
           person.items=person.items||[];
           if(!person.items.includes(v)) person.items.push(v);
           window.track("dislike_added", {}, { uses_dislikes: true });
+          // [알러지 카테고리 자동 매칭] "해산물" 같은 큰 분류를 등록했으면, 실제로 함께 걸러질 세부 키워드를 안내
+          if(ALLERGEN_EXPAND[v]) showToast('"'+v+'"엔 '+ALLERGEN_EXPAND[v].slice(0,5).join(", ")+' 등도 함께 제외돼요.');
           addIn.value=""; afterGroupMembersChange(g.id); renderGroupManage();
         };
         addBtn.onclick=doAdd;
@@ -2484,7 +2517,7 @@ groupOverlay.addEventListener("click",e=>{ if(e.target===groupOverlay) closeGrou
 groupDdBtn.onclick=(e)=>{ e.stopPropagation(); groupDdPanel.classList.toggle("open"); };
 document.addEventListener("click",(e)=>{ if(groupDdPanel.classList.contains("open") && !groupDd.contains(e.target)) groupDdPanel.classList.remove("open"); });
 
-const APP_VERSION="1.8";
+const APP_VERSION="1.9";
 $("pfVer").textContent="v"+APP_VERSION;
 if(window.__ph) window.__ph("register", { app_version: APP_VERSION });
 
