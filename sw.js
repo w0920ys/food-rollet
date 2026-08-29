@@ -11,7 +11,7 @@
    ========================================================================= */
 
 // 앱을 수정할 때마다 이 숫자를 올려주세요 (v1 → v2 → v3 ...)
-const CACHE_VERSION = "jeomechu-slot-v24";
+const CACHE_VERSION = "jeomechu-slot-v25";
 
 // 오프라인에서도 열리게 미리 저장해 둘 파일 목록
 const FILES_TO_CACHE = [
@@ -101,12 +101,21 @@ self.addEventListener("push", (event) => {
 });
 
 // 알림 클릭 → 앱 열기(이미 열려있으면 그 창으로 포커스)
+//   [계측] 이미 열려 있던 창은 포커스만 받고 URL이 안 바뀌어서 index.html이
+//   entry=push를 못 읽는다. 그 경우엔 postMessage로 알려줘서 앱이 대신
+//   app_reengaged{source:'push'}를 발화하게 한다(index.html 상단 스크립트가 수신).
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = (event.notification.data && event.notification.data.url) || "./index.html";
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
-      for (const c of list) { if ("focus" in c) return c.focus(); }
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (list) => {
+      for (const c of list) {
+        if ("focus" in c) {
+          await c.focus();
+          c.postMessage({ type: "notif-open" });
+          return;
+        }
+      }
       if (clients.openWindow) return clients.openWindow(url);
     })
   );

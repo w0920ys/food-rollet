@@ -5,6 +5,82 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>모먹지</title>
 
+<!-- ===== PostHog 계측 =====
+     행동 데이터를 전혀 안 쌓고 있어서 "얼마나 재사용되는지"조차 알 수 없던 문제를
+     풀려고 붙인다. 아래 KEY는 '공개용 프로젝트 키'라 코드에 넣어도 안전하다(진짜
+     비밀은 PostHog 서버에만 있음). 이메일 등 PII는 절대 보내지 않고, 로그인 시
+     Supabase user id(UUID)로만 identify한다(아래쪽 로그인 스크립트에서 처리).
+     * KEY를 채우기 전엔 posthog.init 자체를 건너뛰어서 안전하게 아무 것도
+       전송하지 않는다 — track() 호출은 그냥 조용히 무시된다. -->
+<script>
+// --- 내 PostHog 프로젝트 연결 정보 (공개용) ---
+const POSTHOG_KEY = "";  // TODO: PostHog 프로젝트 설정 > Project API Key(phc_...)
+const POSTHOG_HOST = "https://us.i.posthog.com";  // TODO: 가입 리전에 맞는 호스트
+
+!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+
+if(POSTHOG_KEY){ posthog.init(POSTHOG_KEY, { api_host: POSTHOG_HOST, defaults: "2025-05-24" }); }
+
+// ---- 유입 경로 분류(세션당 1회 판정) ----
+// push: 알림 클릭(서버가 push 링크에 ?entry=push를 붙여 보낸다)
+// room: '함께 정하기' 딥링크(?room=CODE)
+// utm : 캠페인 링크(utm_source 등)
+// install: 홈 화면에 설치된 상태로, 참조 URL 없이 실행됨
+// direct: 그 외 전부
+let phParams; try{ phParams = new URLSearchParams(window.location.search); }catch(e){ phParams = new URLSearchParams(); }
+const PH_IS_STANDALONE = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+function phClassifyEntry(){
+  if(phParams.get("entry")==="push") return "push";
+  if(phParams.get("room")) return "room";
+  if(phParams.get("utm_source")||phParams.get("utm_medium")||phParams.get("utm_campaign")) return "utm";
+  if(PH_IS_STANDALONE && !document.referrer) return "install";
+  return "direct";
+}
+// channel: 지금은 PWA뿐이라 항상 "pwa". 앱인토스 WebView가 열릴 때 ?channel=toss를
+// 붙이게 될 자리를 미리 마련해 둔다(입점 후 그 한 줄만 추가하면 됨).
+const PH_CHANNEL = phParams.get("channel") || "pwa";
+const PH_ENTRY = phClassifyEntry();
+
+if(POSTHOG_KEY){
+  posthog.register({ channel: PH_CHANNEL, is_pwa: PH_IS_STANDALONE, entry: PH_ENTRY, is_logged_in: false });
+}
+
+// 얇은 래퍼 — PostHog가 아직 설정 안 됐으면 조용히 무시. personProps를 주면
+// person property를 같은 요청에 실어 보낸다($set) — "이 유저가 이 기능을 쓰는가"
+// 매트릭스에 쓰는 값들(uses_rooms 같은 bool)이라 항상 true로 세팅해도 충분하다.
+window.track = function(name, props, personProps){
+  try{
+    if(!(POSTHOG_KEY && window.posthog)) return;
+    const p = props ? Object.assign({}, props) : {};
+    if(personProps) p.$set = personProps;
+    window.posthog.capture(name, p);
+  }catch(e){}
+};
+// register/identify/reset 같은 posthog 메서드는 init(POSTHOG_KEY)이 실제로 불려야만
+// 생긴다 — stub 객체는 미리 존재해도 그 메서드들은 없다. 그래서 window.track과
+// 똑같이 POSTHOG_KEY 없으면(=init 자체를 건너뜀) 조용히 무시하는 안전한 통로를 하나
+// 더 두고, 다른 <script> 블록(모듈 포함)에서는 이걸로만 posthog을 건드리게 한다.
+window.__ph = function(method, ...args){
+  try{ if(POSTHOG_KEY && window.posthog) window.posthog[method](...args); }catch(e){}
+};
+
+// [재방문] 앱을 열 때 + 백그라운드에서 다시 포그라운드로 돌아올 때
+let phAppLoaded = false;
+window.addEventListener("load", () => { phAppLoaded = true; window.track("app_opened", {}); });
+document.addEventListener("visibilitychange", () => {
+  if(phAppLoaded && document.visibilityState === "visible") window.track("app_opened", {});
+});
+
+// [알림 유입 귀속] 알림을 눌렀을 때 이미 열려 있던 창은 새 URL로 안 가고 포커스만
+// 받으므로(sw.js notificationclick), entry=push가 안 잡힌다. sw.js가 그 경우
+// postMessage로 알려주면 여기서 재방문 이벤트를 대신 발화한다.
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if(event.data && event.data.type === "notif-open") window.track("app_reengaged", { source: "push" });
+  });
+}
+</script>
+
 <!-- ===== PWA(홈 화면 설치용) 설정 =====
      manifest.json: 앱 이름·아이콘·색상 등 '앱 정보'를 담은 파일
      theme-color: 폰 상태바 색상 (아이콘 배경과 같은 주황)
@@ -1414,6 +1490,7 @@ function applyStateBlob(data){
 function switchGroup(gid){
   if(gid===activeGroup) return;
   commitActiveGroup();           // 현재 그룹 저장
+  window.track("group_switched", {});
   activeGroup=gid;
   loadActiveGroupView();         // 새 그룹 뷰 로드
   selectedDate=dateKey(Date.now());
@@ -1473,6 +1550,7 @@ function spin(){
   if(list.length===0){ resultEl.innerHTML='후보 메뉴가 없습니다<br><span class="sub">메뉴를 선택하거나 제외를 초기화하세요</span>'; return; }
   spinning=true; spinBtn.disabled=true; confirmBtn.disabled=true; resultEl.textContent=""; currentWinner=null;
   resultActions.classList.remove("show");
+  window.track("menu_spun", { pool_size: list.length, excluded_count: excluded.size, spin_index: spinCounter+1, group: activeGroup, exclude_on: excludeChk.checked });
   const n=list.length, winnerIndex=pickWeightedIndex(list);
   if(n===1){ setTimeout(()=>{spinning=false;spinBtn.disabled=false;finish(list[0]);},300); return; }
   const loops=6;
@@ -1485,6 +1563,7 @@ function spin(){
 }
 function finish(item){
   currentWinner=item; spinCounter++;
+  window.track("menu_result_shown", { menu_name: item.name });
   // 이미 나온 메뉴 제외 옵션: 결과가 나온 시점에 제외 목록에 담아 다음 슬롯 중복 방지
   if(excludeChk.checked){ excluded.add(item.name); renderExcludedInfo(); }
   const cl=item.categories&&item.categories.length?" · "+item.categories.join(", "):"";
@@ -1497,6 +1576,7 @@ function confirmWinner(){
   if(!currentWinner) return;
   const tk=dateKey(Date.now());
   const nm=currentWinner.name;
+  window.track("menu_confirmed", { menu_name: nm, categories: currentWinner.categories||[], group: activeGroup, spins_before_confirm: spinCounter });
   // 후보 리스트에 담기 (중복이면 무시)
   picks[tk]=picks[tk]||[];
   if(!picks[tk].some(p=>p.name===nm)){
@@ -1617,7 +1697,7 @@ function attachDragEvents(li, handle, tk){
     if(ti<0) return;
     if(after) ti+=1;
     arr.splice(ti,0,from);
-    todayOrderMap[tk]=arr; save(); renderTodayList();
+    todayOrderMap[tk]=arr; window.track("menu_reordered", {}, { edited_menus: true }); save(); renderTodayList();
   });
 }
 // 오늘 후보에서 특정 메뉴 제거 (최종이었다면 최종도 해제)
@@ -1712,7 +1792,7 @@ function renderCalendar(){
       // 후보만 있는 날: 흐리게 표시(미결정)
       const chip=document.createElement("div"); chip.className="cal-menu pending"; chip.textContent="후보 "+cand.length; cell.appendChild(chip);
     }
-    cell.onclick=()=>{ selectedDate=key; renderCalendar(); renderDayDetail(); };
+    cell.onclick=()=>{ selectedDate=key; renderCalendar(); renderDayDetail(); window.track("calendar_date_viewed", {}, { uses_calendar: true }); };
     grid.appendChild(cell);
   }
   calendarEl.appendChild(grid);
@@ -1810,6 +1890,7 @@ function openCopyDialog(items, isToday){
 }
 function closeCopyDialog(){ copyOverlay.classList.remove("open"); }
 function doCopyFromDialog(){
+  window.track("today_copied", {}, { uses_copy: true });
   const text=buildCopyText(copyDialogItems, copyKeepOrder);
   const btn=copyDlgCopy;
   const done=()=>{
@@ -2015,7 +2096,7 @@ function buildChips(items){
       const star=document.createElement("button"); star.className="chip-star"+(favorites.has(m.name)?" on":"");
       star.title=favorites.has(m.name)?"즐겨찾기 해제":"즐겨찾기";
       star.innerHTML='<span class="material-symbols-rounded">star</span>';
-      star.onclick=(e)=>{ e.stopPropagation(); if(favorites.has(m.name)) favorites.delete(m.name); else favorites.add(m.name); save(); renderMenuList(); };
+      star.onclick=(e)=>{ e.stopPropagation(); const on=favorites.has(m.name); if(on) favorites.delete(m.name); else favorites.add(m.name); window.track("favorite_toggled", { favorited: !on }, { uses_favorites: true }); save(); renderMenuList(); };
       chip.insertBefore(star, label);
       chip.onclick=()=>{ menus[i].selected=!menus[i].selected; afterSelectionChange(); };
     }
@@ -2041,12 +2122,13 @@ function updateSelectAll(){
   selectAll.checked=all; selectAll.indeterminate=!all&&some;
 }
 function afterSelectionChange(){ save(); renderMenuList(); renderIdleReel(); renderPoolInfo(); }
-function removeMenu(i){ excluded.delete(menus[i].name); menus.splice(i,1); save(); renderAll(); }
+function removeMenu(i){ window.track("menu_deleted", {}, { edited_menus: true }); excluded.delete(menus[i].name); menus.splice(i,1); save(); renderAll(); }
 function toggleEditMode(){
   listEditMode=!listEditMode;
   editModeBtn.classList.toggle("active", listEditMode);
   editModeBtn.title=listEditMode?"편집 완료":"편집 모드";
   editModeBtn.querySelector(".material-symbols-rounded").textContent=listEditMode?"check":"edit";
+  if(listEditMode) window.track("edit_mode_toggled", {});
   renderMenuList();
 }
 
@@ -2074,7 +2156,7 @@ function submitDialog(){
   if(menus.some((m,idx)=>m.name===v&&idx!==editingIndex)){ dialogMsg.textContent="이미 있는 메뉴입니다."; return; }
   const cats=[...dlgCats];
   if(editingIndex>=0){ const old=menus[editingIndex].name; if(excluded.has(old)){excluded.delete(old);excluded.add(v);} menus[editingIndex].name=v; menus[editingIndex].categories=cats; }
-  else menus.unshift({name:v,categories:cats,selected:true});
+  else { menus.unshift({name:v,categories:cats,selected:true}); window.track("menu_added", { menu_pool_size: menus.length }, { menu_pool_size: menus.length }); }
   // 현재 슬롯 결과를 수정한 경우 결과 표시도 갱신
   if(currentWinner && editingIndex>=0){
     currentWinner={name:v, categories:cats};
@@ -2137,6 +2219,7 @@ function addMenuToCategory(catName, rawName, msgEl){
     existing.categories=[...(existing.categories||[]), catName];
   } else {
     menus.unshift({ name:v, categories:[catName], selected:true });
+    window.track("menu_added", { menu_pool_size: menus.length }, { menu_pool_size: menus.length });
   }
   save(); renderCatManage();
   // 방금 추가한 카테고리의 입력창에 포커스 복원 (연속 입력 편의)
@@ -2159,13 +2242,14 @@ function renameCategory(ci,newName){
 function deleteCategory(ci){
   const name=categories[ci].name; categories.splice(ci,1);
   menus.forEach(m=>{ if(m.categories) m.categories=m.categories.filter(c=>c!==name); });
+  window.track("category_deleted", {});
   save(); renderCatManage(); renderAll();
 }
 function addCategory(){
   const used=new Set(categories.map(c=>c.color));
   const color=PALETTE.find(c=>!used.has(c))||PALETTE[categories.length%PALETTE.length];
   let base="새 카테고리", name=base, n=1; while(categories.some(c=>c.name===name)){ n++; name=base+n; }
-  categories.push({name,color}); save(); renderCatManage(); renderAll();
+  categories.push({name,color}); window.track("category_added", {}, { uses_categories: true }); save(); renderCatManage(); renderAll();
 }
 
 /* 탭 */
@@ -2175,14 +2259,15 @@ function switchTab(tab){
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
   // [요청] 그룹 선택 드롭다운은 슬롯 탭에서만 노출
   groupDd.style.display = (tab==="slot") ? "" : "none";
-  if(tab==="history") renderHistory();
+  window.track("tab_switched", { tab: tab });
+  if(tab==="history"){ renderHistory(); window.track("history_viewed", {}, { uses_history: true }); }
   if(tab==="profile"){ showProfileDepth("pfMain"); renderProfileTab(); }
   if(tab==="slot") renderNotifyBanner();
 }
 function switchSubTab(sub){
   document.querySelectorAll(".sub-tab").forEach(b=>b.classList.toggle("active", b.dataset.sub===sub));
   document.querySelectorAll(".sub-page").forEach(p=>p.classList.toggle("active", p.id==="sub-"+sub));
-  if(sub==="stats") renderStats(); else { renderCalendar(); renderDayDetail(); }
+  if(sub==="stats"){ renderStats(); window.track("stats_viewed", {}, { uses_stats: true }); } else { renderCalendar(); renderDayDetail(); }
 }
 function renderAll(){ renderGroupBar(); renderIdleReel(); renderExcludedInfo(); renderPoolInfo(); renderMenuList(); renderTodayList(); }
 
@@ -2273,6 +2358,7 @@ function renderGroupManage(){
           const v=addIn.value.trim(); if(!v) return;
           person.items=person.items||[];
           if(!person.items.includes(v)) person.items.push(v);
+          window.track("dislike_added", {}, { uses_dislikes: true });
           addIn.value=""; afterGroupMembersChange(g.id); renderGroupManage();
         };
         addBtn.onclick=doAdd;
@@ -2303,6 +2389,7 @@ function addGroup(){
   let base="새 그룹", name=base, n=1; while(groups.some(g=>g.name===name)){ n++; name=base+n; }
   const id="g"+Date.now();
   groups.push({id, name}); picksAll[id]={}; finalsAll[id]={}; orderAll[id]={}; dislikesAll[id]=[];
+  window.track("group_added", {}, { uses_groups: true, group_count: groups.length });
   save(); renderGroupManage(); renderGroupBar(); showToast("그룹이 추가됐어요.");
 }
 function renameGroup(id, newName){
@@ -2317,6 +2404,7 @@ function deleteGroup(id){
   if(groups.length<=1) return;
   if(!confirm("이 그룹의 당첨 기록이 모두 삭제됩니다. 계속할까요?")) return;
   groups=groups.filter(g=>g.id!==id);
+  window.track("group_deleted", {}, { group_count: groups.length });
   delete picksAll[id]; delete finalsAll[id]; delete orderAll[id]; delete dislikesAll[id];
   if(activeGroup===id){ activeGroup=groups[0].id; loadActiveGroupView(); selectedDate=dateKey(Date.now()); }
   save(); renderGroupManage(); renderGroupBar(); renderTodayList(); renderIdleReel(); renderPoolInfo();
@@ -2333,9 +2421,15 @@ openAddBtn.onclick=()=>openDialog();
 openCatSettings.onclick=openCatManage;
 editModeBtn.onclick=toggleEditMode;
 function updateSearchClear(){ searchInput.closest(".search-wrap").classList.toggle("has-text", searchInput.value.length>0); }
-searchInput.addEventListener("input", ()=>{ updateSearchClear(); renderMenuList(); });
+let phSearchTimer=null;
+searchInput.addEventListener("input", ()=>{
+  updateSearchClear(); renderMenuList();
+  clearTimeout(phSearchTimer);
+  const q=searchInput.value.trim();
+  if(q) phSearchTimer=setTimeout(()=>window.track("menu_searched", {}, { uses_search: true }), 600); // 타이핑 멈춘 뒤 한 번만
+});
 searchClear.onclick=()=>{ searchInput.value=""; updateSearchClear(); renderMenuList(); searchInput.focus(); };
-excludeChk.addEventListener("change",()=>{ renderIdleReel(); renderExcludedInfo(); renderPoolInfo(); });
+excludeChk.addEventListener("change",()=>{ if(excludeChk.checked) window.track("exclude_used", {}, { uses_dislikes: true }); renderIdleReel(); renderExcludedInfo(); renderPoolInfo(); });
 resetExclBtn.onclick=()=>{ excluded.clear(); renderExcludedInfo(); renderIdleReel(); renderPoolInfo(); };
 selectAll.onchange=()=>{ const idxs=currentTabIndices(); idxs.forEach(i=>{menus[i].selected=selectAll.checked;}); afterSelectionChange(); };
 periodTabs.querySelectorAll(".period-tab").forEach(t=>{
@@ -2363,6 +2457,7 @@ document.addEventListener("click",(e)=>{ if(groupDdPanel.classList.contains("ope
 
 const APP_VERSION="1.8";
 $("pfVer").textContent="v"+APP_VERSION;
+if(window.__ph) window.__ph("register", { app_version: APP_VERSION });
 
 // [공용] 텍스트를 클립보드에 복사 (성공 시 onOk 콜백)
 function copyToClipboard(text, onOk){
@@ -2628,9 +2723,12 @@ $("pfNotifyEnabled").onchange = async ()=>{
       return;
     }
     notify.enabled=true; $("pfNotifyMsg").textContent="알림이 켜졌어요!"; showToast("알림이 켜졌어요! 🔔");
+    window.track("notify_toggled", { enabled: true });
+    window.track("push_subscribed", {}, { notify_enabled: true, notify_time: notify.time });
   } else {
     notify.enabled=false; if(window.unsubscribePush) await window.unsubscribePush();
     $("pfNotifyMsg").textContent="알림을 껐어요."; showToast("알림을 껐어요.");
+    window.track("notify_toggled", { enabled: false }, { notify_enabled: false });
   }
   save(); renderNotifyBanner();
   if($("pfNotifySummary")) $("pfNotifySummary").textContent = notifySummaryText();
@@ -2771,7 +2869,7 @@ load(); renderAll(); renderProfileTab(); renderNotifyBanner();
   }
   // 안드로이드/데스크톱 크롬: 기본 설치배너 가로채서 우리 버튼으로
   window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; refreshInstallItem(); });
-  window.addEventListener("appinstalled", () => { deferredPrompt = null; refreshInstallItem(); });
+  window.addEventListener("appinstalled", () => { deferredPrompt = null; refreshInstallItem(); if(window.track) window.track("pwa_installed", {}, { installed: true }); });
 
   // [새 버전 배너]
   function showUpdateBanner(){ const b = el("updateBanner"); if(b) b.classList.add("show"); }
@@ -2782,6 +2880,7 @@ load(); renderAll(); renderProfileTab(); renderNotifyBanner();
     // 설치 버튼 클릭
     const item = el("pfInstall");
     if(item) item.onclick = async () => {
+      if(window.track) window.track("install_clicked", {});
       if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; refreshInstallItem(); }
       else if(isIOS){ el("installOverlay").classList.add("open"); }  // iOS는 안내 팝업
     };
@@ -2958,6 +3057,7 @@ async function syncOnLogin(){
     await cloudPush();
     syncEl.style.color = ""; syncEl.textContent = "이 기기의 메뉴를 클라우드에 백업했어요";
   }
+  window.track("sync_completed", {}, { has_account: true, uses_sync: true });
 }
 
 // ---- 저장 훅: 앱에서 뭔가 저장될 때마다 호출됨 (index 위쪽 save()가 부름) ----
@@ -3003,6 +3103,11 @@ window.unsubscribePush = async function(){
 // ---- 로그인 상태 변화 감지 (로그인/로그아웃/새로고침 후 자동로그인) ----
 supabase.auth.onAuthStateChange(async (event, session) => {
   currentUser = session?.user || null;
+  // [계측] UUID만 넘긴다(이메일 등 PII 금지). 로그아웃되면 새 익명 사용자로 리셋.
+  if(window.__ph){
+    if(currentUser){ window.__ph("identify", currentUser.id); window.__ph("register", { is_logged_in: true }); }
+    else if(event === "SIGNED_OUT"){ window.__ph("reset"); window.__ph("register", { is_logged_in: false }); }
+  }
   renderAuthView();
   // [5단계] 비밀번호 재설정 링크로 접속한 경우 → 새 비밀번호 입력 팝업
   if(event === "PASSWORD_RECOVERY"){
@@ -3021,7 +3126,10 @@ supabase.auth.onAuthStateChange(async (event, session) => {
       const prev = localStorage.getItem(key);
       if(prev){
         const days = (Date.now() - parseInt(prev,10)) / 86400000;
-        if(days >= 30 && window.showToast) window.showToast("오랜만이에요! 다시 만나서 반가워요 👋");
+        if(days >= 30){
+          if(window.showToast) window.showToast("오랜만이에요! 다시 만나서 반가워요 👋");
+          window.track("user_resurrected", { days_since_last_login: Math.round(days) });
+        }
       }
       localStorage.setItem(key, String(Date.now()));
     }catch(e){}
@@ -3114,7 +3222,7 @@ $("authSignupBtn").onclick = async () => {
   signupMsgEl.textContent = "가입 중…";
   const { error } = await supabase.auth.signUp({ email, password: pw });  // 회원가입은 기본값(로그인 유지)로 저장됨
   if(error){ signupMsgEl.textContent = "가입 실패: " + error.message; }
-  else { signupMsgEl.textContent = "가입 완료! 로그인되었습니다."; }
+  else { signupMsgEl.textContent = "가입 완료! 로그인되었습니다."; window.track("signed_up", {}, { has_account: true }); }
 };
 $("authLoginBtn").onclick = async () => {
   const email = emailEl.value.trim();
@@ -3124,6 +3232,7 @@ $("authLoginBtn").onclick = async () => {
   const { error } = await supabase.auth.signInWithPassword({ email, password: passEl.value });
   if(error){ msgEl.textContent = "로그인 실패: " + error.message; return; }
   msgEl.textContent = "";
+  window.track("logged_in", {});
   applyRememberMe(remember);  // 로그인 성공 '후' 세션 저장 위치를 조정 (SDK 내부 동기화가 끝난 뒤라 안전)
 };
 // [프로필 탭] '로그아웃' 텍스트 버튼
@@ -3163,6 +3272,7 @@ window.sendFeedback = async function(type, text){
       type, message: text, user_id: currentUser ? currentUser.id : null, email: currentUser ? currentUser.email : null,
     });
     if(error){ console.log("feedback insert 오류:", error); return { ok:false }; }
+    window.track("feedback_sent", { type });
     return { ok:true };
   }catch(e){ return { ok:false }; }
 };
@@ -3286,6 +3396,7 @@ window.openRoomByCode = async function(code){
   }
   const { data: room, error } = await supabase.from("rooms").select("*").eq("code", code).maybeSingle();
   if(error || !room){ if(window.showToast) window.showToast("방을 찾을 수 없어요. 코드를 확인해주세요."); return; }
+  window.track("room_joined", {}, { uses_rooms: true });
   currentRoom = room; roomRevealedFor = null;
   roomEntries = await fetchRoomEntries(room.id);
   subscribeRoom(room.id);
@@ -3302,6 +3413,7 @@ window.createAndShareRoom = async function(){
   const { data: room, error } = await supabase.from("rooms")
     .insert({ code, host_user_id: currentUser.id, host_nickname: roomDisplayName() }).select().single();
   if(error || !room){ if(window.showToast) window.showToast("방을 만들지 못했어요. 잠시 후 다시 시도해주세요."); console.log("방 생성 오류:", error); return; }
+  window.track("room_created", {}, { uses_rooms: true });
   currentRoom = room; roomEntries = []; roomRevealedFor = null;
   subscribeRoom(room.id);
   renderRoomView();
@@ -3329,6 +3441,7 @@ window.submitRoomEntry = async function(){
   const { error } = await supabase.from("room_entries")
     .upsert({ room_id: currentRoom.id, user_id: currentUser.id, nickname: roomDisplayName(), menu_name: v }, { onConflict:"room_id,user_id" });
   if(error){ console.log("메뉴 제출 오류:", error); if(window.showToast) window.showToast("메뉴 제출에 실패했어요."); return; }
+  window.track("room_entry_submitted", {});
   roomEntries = await fetchRoomEntries(currentRoom.id);
   renderRoomView();
   if(window.showToast) window.showToast("메뉴를 제출했어요!");
@@ -3344,6 +3457,7 @@ window.spinRoom = async function(){
     .update({ status:"done", winner_name: winner.menu_name, winner_nickname: winner.nickname })
     .eq("id", currentRoom.id).select().single();
   if(error){ console.log("방 스핀 오류:", error); if(window.showToast) window.showToast("돌리기에 실패했어요."); return; }
+  window.track("room_spun", { candidate_count: candidates.length });
   currentRoom = updated; renderRoomView(); // 본인 화면은 Realtime 왕복을 기다리지 않고 즉시 반영
 };
 
