@@ -23,13 +23,13 @@ const POSTHOG_HOST = "https://us.i.posthog.com";
 let phParams; try{ phParams = new URLSearchParams(window.location.search); }catch(e){ phParams = new URLSearchParams(); }
 
 // [계측 제외] 내가 로컬에서 테스트하거나(localhost/개발 서버) Claude가 리뷰차 열어본
-// 화면이 실제 지표에 안 섞이게, 운영 도메인이 아니면 posthog.init 자체를 건너뛴다
-// (=아무 것도 전송 안 함 — window.track/__ph도 이 값을 보고 조용히 무시함).
-// 운영 도메인에서 손으로 직접 테스트할 때는 주소에 ?ph_test=1을 한 번 붙이면(예:
-// https://food-rollet.vercel.app/?ph_test=1) 이 브라우저에 표시가 남아(localStorage)
-// 그 뒤로도 이벤트에 test_mode:true가 계속 붙는다. 지우려면 ?ph_test=0.
-// 그 test_mode 기준으로 PostHog 쪽 "Filter test accounts" 등록은 PostHog
-// 프로젝트 설정에서 한 번 해줘야 한다(코드로는 여기까지만 가능).
+// 화면, 그리고 운영 도메인이라도 테스트 모드로 표시해 둔 브라우저는 posthog.init
+// 자체를 건너뛴다(=아무 것도 전송 안 함, PostHog 소진량에 안 잡힘 —
+// window.track/__ph도 이 값을 보고 조용히 무시함).
+// 운영 도메인에서 직접(폰 설치, 알림 등 로컬에서 재현 안 되는 것) 테스트해야
+// 할 땐 주소에 ?ph_test=1을 한 번 붙이면(예: https://food-rollet.vercel.app/?ph_test=1)
+// 이 브라우저에 표시가 남아(localStorage) 그 뒤로도 계속 전송 자체가 꺼진 채로
+// 남는다. 다시 켜려면(=실제 사용자로 되돌리려면) ?ph_test=0.
 const PH_PROD_HOST = "food-rollet.vercel.app";
 const PH_IS_PROD_HOST = window.location.hostname === PH_PROD_HOST;
 let PH_TEST_MODE = false;
@@ -38,7 +38,7 @@ try{
   if(phParams.get("ph_test")==="0") localStorage.removeItem("ph_test_mode");
   PH_TEST_MODE = localStorage.getItem("ph_test_mode")==="1";
 }catch(e){}
-const PH_ENABLED = !!(POSTHOG_KEY && PH_IS_PROD_HOST);
+const PH_ENABLED = !!(POSTHOG_KEY && PH_IS_PROD_HOST && !PH_TEST_MODE);
 
 // person_profiles:'identified_only' → 로그인 전(익명) 사용자는 Person 프로필을
 // 안 만든다(PostHog 기본 권장값, 비용 절약). 이벤트 자체는 익명 상태에서도 똑같이
@@ -67,7 +67,10 @@ const PH_CHANNEL = phParams.get("channel") || "pwa";
 const PH_ENTRY = phClassifyEntry();
 
 if(PH_ENABLED){
-  posthog.register({ channel: PH_CHANNEL, is_pwa: PH_IS_STANDALONE, entry: PH_ENTRY, is_logged_in: false, test_mode: PH_TEST_MODE });
+  // test_mode는 안 붙인다 — PH_TEST_MODE가 true면 PH_ENABLED가 false라 이 블록 자체가
+  // 안 돈다(=테스트 모드에선 애초에 아무 것도 전송 안 됨). PostHog 쪽 "test_mode=true"
+  // 필터는 그래서 지금은 실제로 걸릴 일이 없는 안전망일 뿐이다.
+  posthog.register({ channel: PH_CHANNEL, is_pwa: PH_IS_STANDALONE, entry: PH_ENTRY, is_logged_in: false });
 }
 
 // 얇은 래퍼 — PostHog가 아직 설정 안 됐거나(키 없음) 운영 도메인이 아니면 조용히
